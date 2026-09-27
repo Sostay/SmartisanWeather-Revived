@@ -42,12 +42,28 @@ android {
     }
 
     signingConfigs {
+        val devKeystore = file("${rootDir}/signing/debug.keystore")
+        if (devKeystore.exists()) {
+            getByName("debug") {
+                storeFile = devKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
         if (hasReleaseSigning) {
             create("release") {
                 storeFile = file(releaseStoreFile!!)
                 storePassword = releaseStorePassword
                 keyAlias = releaseKeyAlias
                 keyPassword = releaseKeyPassword
+            }
+        } else if (devKeystore.exists()) {
+            create("release") {
+                storeFile = devKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
             }
         }
     }

@@ -518,11 +518,11 @@ private fun CompactWeatherBody(
 ) {
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         Column(
             modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Bottom,
         ) {
             Text(
                 text = model.temperature,
@@ -586,16 +586,16 @@ private fun CompactWeatherBody(
             }
         }
 
-        Spacer(GlanceModifier.width(8.dp))
+        Spacer(GlanceModifier.width(6.dp))
 
         Box(
-            modifier = GlanceModifier.size(92.dp),
-            contentAlignment = Alignment.Center,
+            modifier = GlanceModifier.size(108.dp),
+            contentAlignment = Alignment.TopCenter,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.size(86.dp),
+                modifier = GlanceModifier.size(102.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )

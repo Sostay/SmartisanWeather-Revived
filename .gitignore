@@ -23,6 +23,7 @@ output-metadata.json
 # Signing and service configuration
 *.jks
 *.keystore
+!signing/debug.keystore
 google-services.json
 
 # Project-generated artifacts
