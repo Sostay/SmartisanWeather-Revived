@@ -446,7 +446,7 @@ private fun ReadyWidget(
             appWidgetId = appWidgetId,
             model = model,
             spec = spec,
-            modifier = GlanceModifier.fillMaxSize().padding(spec.outerPaddingDp.dp),
+            modifier = GlanceModifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 4.dp),
         )
     }
 }
@@ -526,21 +526,21 @@ private fun CompactWeatherBody(
         ) {
             Text(
                 text = model.temperature,
-                style = primaryText(sizeSp = 44, weight = FontWeight.Bold),
+                style = primaryText(sizeSp = 56, weight = FontWeight.Bold),
                 maxLines = 1,
             )
             Spacer(GlanceModifier.height(1.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = model.condition,
-                    style = primaryText(sizeSp = 14, weight = FontWeight.Medium),
+                    style = primaryText(sizeSp = 15, weight = FontWeight.Medium),
                     maxLines = 1,
                 )
                 model.temperatureRange?.let { range ->
                     Spacer(GlanceModifier.width(6.dp))
                     Text(
                         text = range,
-                        style = secondaryText(sizeSp = 12),
+                        style = secondaryText(sizeSp = 13),
                         maxLines = 1,
                     )
                 }
@@ -559,7 +559,7 @@ private fun CompactWeatherBody(
                 model.aqi?.let { aqi ->
                     Text(
                         text = aqi,
-                        style = tertiaryText(sizeSp = 11),
+                        style = tertiaryText(sizeSp = 13),
                         maxLines = 1,
                     )
                     Spacer(GlanceModifier.height(2.dp))
@@ -571,7 +571,7 @@ private fun CompactWeatherBody(
             ) {
                 Text(
                     text = model.cityName,
-                    style = secondaryText(sizeSp = 12, weight = FontWeight.Medium),
+                    style = secondaryText(sizeSp = 14, weight = FontWeight.Medium),
                     maxLines = 1,
                 )
                 Spacer(GlanceModifier.width(4.dp))
@@ -580,22 +580,22 @@ private fun CompactWeatherBody(
                     contentDescription = context.getString(
                         R.string.weather_widget_refresh_content_description,
                     ),
-                    modifier = GlanceModifier.size(12.dp),
+                    modifier = GlanceModifier.size(13.dp),
                     colorFilter = whiteTint(),
                 )
             }
         }
 
-        Spacer(GlanceModifier.width(6.dp))
+        Spacer(GlanceModifier.width(8.dp))
 
         Box(
-            modifier = GlanceModifier.size(76.dp),
+            modifier = GlanceModifier.size(92.dp),
             contentAlignment = Alignment.Center,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.size(68.dp),
+                modifier = GlanceModifier.size(86.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
