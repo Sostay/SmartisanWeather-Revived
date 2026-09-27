@@ -94,6 +94,13 @@ jobs:
             --stacktrace \
             -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
 
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: app/build/reports/
+
       - name: Collect APKs
         run: |
           mkdir -p dist

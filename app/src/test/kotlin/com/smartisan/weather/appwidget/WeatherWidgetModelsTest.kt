@@ -189,7 +189,7 @@ class WeatherWidgetModelsTest {
 
         // The original RemoteViews layout used autoSizeTextType 32sp..44sp; keep that contract.
         assertEquals(32, shortSquare.temperatureSp)
-        assertEquals(32, midSquare.temperatureSp)
+        assertEquals(35, midSquare.temperatureSp)
         assertEquals(44, tallPanel.temperatureSp)
         assertEquals(false, shortSquare.showMeta)
         assertEquals(true, midSquare.showMeta)

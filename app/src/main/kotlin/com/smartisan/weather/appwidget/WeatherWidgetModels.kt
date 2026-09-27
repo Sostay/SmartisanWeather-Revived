@@ -72,13 +72,13 @@ internal data class WeatherWidgetLayoutSpec(
             // AQI line is dropped first when the panel is too short to hold it.
             val showWideAqi = wide && bodyDp - CONDITION_ROW_DP - AQI_ROW_DP >= MIN_HERO_DP
             val heroDp = bodyDp - CONDITION_ROW_DP - metaBlockDp -
-                if (showWideAqi) AQI_ROW_DP else 0
+                (if (showWideAqi) AQI_ROW_DP else 0)
             val temperatureSp = (heroDp / LINE_HEIGHT_RATIO)
                 .toInt()
                 .coerceIn(MIN_TEMPERATURE_SP, MAX_TEMPERATURE_SP)
 
             val leftoverDp = bodyDp - (temperatureSp * LINE_HEIGHT_RATIO).toInt() -
-                CONDITION_ROW_DP - if (showWideAqi) AQI_ROW_DP else 0 - metaBlockDp
+                CONDITION_ROW_DP - (if (showWideAqi) AQI_ROW_DP else 0) - metaBlockDp
 
             return WeatherWidgetLayoutSpec(
                 isWide = wide,
