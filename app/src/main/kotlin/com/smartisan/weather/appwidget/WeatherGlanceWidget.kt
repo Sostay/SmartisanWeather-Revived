@@ -446,7 +446,7 @@ private fun ReadyWidget(
             appWidgetId = appWidgetId,
             model = model,
             spec = spec,
-            modifier = GlanceModifier.fillMaxSize().padding(horizontal = 4.dp, vertical = 2.dp),
+            modifier = GlanceModifier.fillMaxSize(),
         )
     }
 }
@@ -516,92 +516,94 @@ private fun CompactWeatherBody(
     spec: WeatherWidgetLayoutSpec,
     modifier: GlanceModifier,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.Top,
-    ) {
-        Column(
-            modifier = GlanceModifier
-                .defaultWeight()
-                .fillMaxHeight()
-                .padding(start = 12.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            Text(
-                text = model.temperature,
-                style = primaryText(sizeSp = 56, weight = FontWeight.Bold),
-                maxLines = 1,
-            )
-            Spacer(GlanceModifier.height(1.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = model.condition,
-                    style = primaryText(sizeSp = 15, weight = FontWeight.Medium),
-                    maxLines = 1,
-                )
-                model.temperatureRange?.let { range ->
-                    Spacer(GlanceModifier.width(6.dp))
-                    Text(
-                        text = range,
-                        style = secondaryText(sizeSp = 13),
-                        maxLines = 1,
-                    )
-                }
-            }
-            Spacer(GlanceModifier.height(2.dp))
-            if (model.alertText != null) {
-                AlertLabel(
-                    context = context,
-                    appWidgetId = appWidgetId,
-                    text = model.alertText,
-                    alert = model.alert,
-                    modifier = GlanceModifier.fillMaxWidth().height(18.dp),
-                )
-                Spacer(GlanceModifier.height(2.dp))
-            } else {
-                model.aqi?.let { aqi ->
-                    Text(
-                        text = aqi,
-                        style = tertiaryText(sizeSp = 13),
-                        maxLines = 1,
-                    )
-                    Spacer(GlanceModifier.height(2.dp))
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = GlanceModifier.clickable(actionRunCallback<WeatherWidgetRefreshAction>()),
-            ) {
-                Text(
-                    text = model.cityName,
-                    style = secondaryText(sizeSp = 14, weight = FontWeight.Medium),
-                    maxLines = 1,
-                )
-                Spacer(GlanceModifier.width(4.dp))
-                Image(
-                    provider = ImageProvider(R.drawable.weather_widget_refresh),
-                    contentDescription = context.getString(
-                        R.string.weather_widget_refresh_content_description,
-                    ),
-                    modifier = GlanceModifier.size(13.dp),
-                    colorFilter = whiteTint(),
-                )
-            }
-        }
-
-        Spacer(GlanceModifier.width(4.dp))
-
+    Box(modifier = modifier) {
+        // Top-Right: Weather icon floating in upper-right quadrant
         Box(
-            modifier = GlanceModifier.width(112.dp).fillMaxHeight(),
+            modifier = GlanceModifier
+                .fillMaxSize()
+                .padding(top = 4.dp, end = 6.dp),
             contentAlignment = Alignment.TopEnd,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.width(112.dp).height(130.dp),
+                modifier = GlanceModifier.size(96.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
+        }
+
+        // Bottom-Left: Information column anchored at bottom-left with ample breathing room
+        Box(
+            modifier = GlanceModifier
+                .fillMaxSize()
+                .padding(start = 14.dp, bottom = 12.dp, end = 8.dp),
+            contentAlignment = Alignment.BottomStart,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.Start,
+            ) {
+                Text(
+                    text = model.temperature,
+                    style = primaryText(sizeSp = 54, weight = FontWeight.Bold),
+                    maxLines = 1,
+                )
+                Spacer(GlanceModifier.height(1.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = model.condition,
+                        style = primaryText(sizeSp = 15, weight = FontWeight.Medium),
+                        maxLines = 1,
+                    )
+                    model.temperatureRange?.let { range ->
+                        Spacer(GlanceModifier.width(6.dp))
+                        Text(
+                            text = range,
+                            style = secondaryText(sizeSp = 13),
+                            maxLines = 1,
+                        )
+                    }
+                }
+                Spacer(GlanceModifier.height(2.dp))
+                if (model.alertText != null) {
+                    AlertLabel(
+                        context = context,
+                        appWidgetId = appWidgetId,
+                        text = model.alertText,
+                        alert = model.alert,
+                        modifier = GlanceModifier.height(18.dp),
+                    )
+                    Spacer(GlanceModifier.height(2.dp))
+                } else {
+                    model.aqi?.let { aqi ->
+                        Text(
+                            text = aqi,
+                            style = tertiaryText(sizeSp = 13),
+                            maxLines = 1,
+                        )
+                        Spacer(GlanceModifier.height(2.dp))
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = GlanceModifier.clickable(actionRunCallback<WeatherWidgetRefreshAction>()),
+                ) {
+                    Text(
+                        text = model.cityName,
+                        style = secondaryText(sizeSp = 14, weight = FontWeight.Medium),
+                        maxLines = 1,
+                    )
+                    Spacer(GlanceModifier.width(4.dp))
+                    Image(
+                        provider = ImageProvider(R.drawable.weather_widget_refresh),
+                        contentDescription = context.getString(
+                            R.string.weather_widget_refresh_content_description,
+                        ),
+                        modifier = GlanceModifier.size(13.dp),
+                        colorFilter = whiteTint(),
+                    )
+                }
+            }
         }
     }
 }
