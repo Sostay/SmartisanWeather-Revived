@@ -1,0 +1,142 @@
+name: Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Release signing material. Supplied exclusively from repository secrets; the
+  # build succeeds unsigned when they are absent so forks and pull requests
+  # still get a full verification run.
+  RELEASE_STORE_FILE: ${{ secrets.RELEASE_STORE_FILE }}
+  RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+  RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+  RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+  RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+
+jobs:
+  build:
+    name: Test, lint and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The build pins JDK 25 for the Gradle daemon (see
+      # gradle/gradle-daemon-jvm.properties). If Temurin 25 is ever unavailable
+      # here, change this to a JDK that exists and Gradle will still fetch the
+      # pinned 25 toolchain itself through the Foojay URLs in that file.
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept SDK licenses
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Install Android platform 37
+        run: |
+          sdkmanager "platform-tools" "platforms;android-37"
+          sdkmanager --list_installed || true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      - name: Decode release keystore
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+            echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "Decoded release keystore from repository secret."
+          else
+            echo "::warning::RELEASE_KEYSTORE_BASE64 is not set. The release APK will be UNSIGNED."
+          fi
+
+      - name: Report signing configuration
+        run: |
+          for name in RELEASE_KEYSTORE_BASE64 RELEASE_STORE_FILE RELEASE_STORE_PASSWORD \
+                      RELEASE_KEY_ALIAS RELEASE_KEY_PASSWORD; do
+            if [ -n "${!name:-}" ]; then
+              echo "set      $name"
+            else
+              echo "missing  $name"
+            fi
+          done
+
+      - name: Test, lint and package
+        run: |
+          ./gradlew \
+            testDebugUnitTest \
+            lintDebug \
+            assembleDebug \
+            assembleRelease \
+            --stacktrace \
+            -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
+
+      - name: Collect APKs
+        run: |
+          mkdir -p dist
+          find app/build/outputs/apk -name '*.apk' -exec cp -v {} dist/ \;
+          ls -l dist
+
+      - name: Verify release signature
+        run: |
+          apk="$(find dist -name '*release*.apk' | head -n 1)"
+          if [ -z "$apk" ]; then
+            echo "::error::No release APK was produced."
+            exit 1
+          fi
+          apksigner="$(find "${ANDROID_SDK_ROOT}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          if [ -z "$apksigner" ]; then
+            echo "::warning::apksigner not found; skipping signature verification."
+            exit 0
+          fi
+          if "$apksigner" verify --print-certs "$apk"; then
+            echo "Release APK signature verified."
+          else
+            echo "::warning::Release APK is not signed. Set the RELEASE_* repository secrets."
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        permissions:
+          contents: write
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          mapfile -t apks < <(find dist -name '*.apk' | sort)
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "${apks[@]}" --clobber
+          else
+            gh release create "$tag" --title "$tag" --generate-notes "${apks[@]}"
+          fi
+          gh release view "$tag"

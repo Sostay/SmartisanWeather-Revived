@@ -5,6 +5,26 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// Release signing is injected by CI from repository secrets, see
+// .github/workflows/android-release.yml. Each value may equally come from a
+// local ~/.gradle/gradle.properties entry or from a -PRELEASE_* command-line
+// property. When any of the four is missing the release variant is simply left
+// unsigned, so a fresh clone can still run tests, lint and assembleDebug.
+val releaseStoreFile: String? = providers.gradleProperty("RELEASE_STORE_FILE").orNull
+    ?: providers.environmentVariable("RELEASE_STORE_FILE").orNull
+val releaseStorePassword: String? = providers.gradleProperty("RELEASE_STORE_PASSWORD").orNull
+    ?: providers.environmentVariable("RELEASE_STORE_PASSWORD").orNull
+val releaseKeyAlias: String? = providers.gradleProperty("RELEASE_KEY_ALIAS").orNull
+    ?: providers.environmentVariable("RELEASE_KEY_ALIAS").orNull
+val releaseKeyPassword: String? = providers.gradleProperty("RELEASE_KEY_PASSWORD").orNull
+    ?: providers.environmentVariable("RELEASE_KEY_PASSWORD").orNull
+val hasReleaseSigning = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.smartisan.weather"
     compileSdk {
@@ -21,8 +41,22 @@ android {
 
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Stays null when the RELEASE_* values are absent, which keeps the
+            // variant unsigned instead of breaking configuration.
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             optimization {
