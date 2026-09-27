@@ -54,7 +54,8 @@ jobs:
 
       - name: Install Android platform 37
         run: |
-          sdkmanager "platform-tools" "platforms;android-37"
+          sdkmanager "platform-tools" "platforms;android-37" \
+            || echo "::warning::Manual platform install failed; letting the Android Gradle Plugin resolve it."
           sdkmanager --list_installed || true
 
       - name: Set up Gradle
@@ -96,12 +97,14 @@ jobs:
       - name: Collect APKs
         run: |
           mkdir -p dist
-          find app/build/outputs/apk -name '*.apk' -exec cp -v {} dist/ \;
-          ls -l dist
+          # --parents keeps the build-type directory, because the release APK is renamed
+          # to SmartisanWeather-Revived-<version>.apk and can no longer be matched by name.
+          find app/build/outputs/apk -name '*.apk' -exec cp --parents -v {} dist/ \;
+          find dist -name '*.apk' -exec ls -lh {} \;
 
       - name: Verify release signature
         run: |
-          apk="$(find dist -name '*release*.apk' | head -n 1)"
+          apk="$(find dist -path '*/release/*' -name '*.apk' | head -n 1)"
           if [ -z "$apk" ]; then
             echo "::error::No release APK was produced."
             exit 1
@@ -121,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: dist/*.apk
+          path: dist/
           if-no-files-found: error
           retention-days: 30
 
