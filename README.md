@@ -75,6 +75,8 @@ Smartisan OS 早已退出历史舞台，其中的天气应用也留在了旧 And
 
 Debug APK 位于 `app/build/outputs/apk/debug/`。
 
+Fork 后的 GitHub Actions 自动构建、Release 签名注入，以及桌面小组件的视觉定制入口，见 [docs/build-and-widget-customization.md](docs/build-and-widget-customization.md)。
+
 ## 致谢
 
 感谢 [People-11](https://github.com/People-11/) 的 [SmartisanOS_APP_Port](https://github.com/People-11/SmartisanOS_APP_Port/) 移植工作。本项目使用该项目提供的 `Weather_8.1.3.apk` 进行逆向分析，用于提取原版资源，并确认 UI 层级、视觉细节与交互行为。
