@@ -138,6 +138,7 @@ private sealed interface WeatherWidgetDisplayModel {
     data class Ready(
         val cityName: String,
         val cityKey: String,
+        val backgroundStyle: Int,
         val backgroundRes: Int,
         val weatherIconRes: Int,
         val condition: String,
@@ -186,10 +187,12 @@ private object WeatherWidgetDisplayModelLoader {
         val currentIcon = WeatherCodeMapping.getIcon(content.code, content.isNight)
             .takeIf { it > 0 }
             ?: WeatherCodeMapping.getIcon("99")
+        val backgroundStyle = settings.readWidgetBackgroundStyle(appWidgetId)
 
         return WeatherWidgetDisplayModel.Ready(
             cityName = city.displayName,
             cityKey = city.locationKey,
+            backgroundStyle = backgroundStyle,
             backgroundRes = weatherWidgetBackground(theme.getInfoBgRes()),
             weatherIconRes = currentIcon,
             condition = context.getString(conditionRes),
@@ -342,15 +345,27 @@ private fun WeatherWidgetSurface(
     val cityKey = (model as? WeatherWidgetDisplayModel.Ready)?.cityKey
     val openWeather = actionStartActivity(openWeatherIntent(context, appWidgetId, cityKey))
 
-    Box(
-        modifier = GlanceModifier
-            .fillMaxSize()
+    val backgroundStyle = (model as? WeatherWidgetDisplayModel.Ready)?.backgroundStyle
+        ?: WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT
+
+    val bgModifier = when (backgroundStyle) {
+        WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT -> GlanceModifier
+        WeatherSettings.WIDGET_BG_STYLE_TRANSLUCENT -> GlanceModifier
+            .background(ColorProvider(Color(0x38000000)))
+            .cornerRadius(android.R.dimen.system_app_widget_background_radius)
+        else -> GlanceModifier
             .background(
                 imageProvider = ImageProvider(background),
                 contentScale = ContentScale.FillBounds,
             )
             .appWidgetBackground()
             .cornerRadius(android.R.dimen.system_app_widget_background_radius)
+    }
+
+    Box(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .then(bgModifier)
             .clickable(openWeather),
     ) {
         when (model) {
@@ -411,12 +426,12 @@ private fun ReadyWidget(
     model: WeatherWidgetDisplayModel.Ready,
     spec: WeatherWidgetLayoutSpec,
 ) {
-    Column(
-        modifier = GlanceModifier.fillMaxSize().padding(spec.outerPaddingDp.dp),
-    ) {
-        WidgetHeader(context, appWidgetId, model, spec)
-        Spacer(GlanceModifier.height(spec.bodyGapDp.dp))
-        if (spec.isWide) {
+    if (spec.isWide) {
+        Column(
+            modifier = GlanceModifier.fillMaxSize().padding(spec.outerPaddingDp.dp),
+        ) {
+            WidgetHeader(context, appWidgetId, model, spec)
+            Spacer(GlanceModifier.height(spec.bodyGapDp.dp))
             WideWeatherBody(
                 context = context,
                 appWidgetId = appWidgetId,
@@ -424,15 +439,15 @@ private fun ReadyWidget(
                 spec = spec,
                 modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
             )
-        } else {
-            CompactWeatherBody(
-                context = context,
-                appWidgetId = appWidgetId,
-                model = model,
-                spec = spec,
-                modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
-            )
         }
+    } else {
+        CompactWeatherBody(
+            context = context,
+            appWidgetId = appWidgetId,
+            model = model,
+            spec = spec,
+            modifier = GlanceModifier.fillMaxSize().padding(spec.outerPaddingDp.dp),
+        )
     }
 }
 
@@ -501,46 +516,36 @@ private fun CompactWeatherBody(
     spec: WeatherWidgetLayoutSpec,
     modifier: GlanceModifier,
 ) {
-    Column(modifier = modifier) {
-        Row(
-            modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = model.temperature,
-                modifier = GlanceModifier.defaultWeight(),
-                style = primaryText(
-                    sizeSp = spec.temperatureSp,
-                    weight = FontWeight.Bold,
-                ),
+                style = primaryText(sizeSp = 44, weight = FontWeight.Bold),
                 maxLines = 1,
             )
-        }
-        Row(
-            modifier = GlanceModifier.fillMaxWidth().height(18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                provider = ImageProvider(model.weatherIconRes),
-                contentDescription = null,
-                modifier = GlanceModifier.size(18.dp),
-                contentScale = ContentScale.Crop,
-                colorFilter = whiteTint(),
-            )
-            Spacer(GlanceModifier.width(4.dp))
-            Text(
-                text = model.condition,
-                modifier = GlanceModifier.defaultWeight(),
-                style = primaryText(sizeSp = 11, weight = FontWeight.Medium),
-                maxLines = 1,
-            )
-            model.temperatureRange?.let {
-                Spacer(GlanceModifier.width(5.dp))
-                Text(text = it, style = secondaryText(sizeSp = 10), maxLines = 1)
+            Spacer(GlanceModifier.height(1.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = model.condition,
+                    style = primaryText(sizeSp = 14, weight = FontWeight.Medium),
+                    maxLines = 1,
+                )
+                model.temperatureRange?.let { range ->
+                    Spacer(GlanceModifier.width(6.dp))
+                    Text(
+                        text = range,
+                        style = secondaryText(sizeSp = 12),
+                        maxLines = 1,
+                    )
+                }
             }
-        }
-        if (spec.showMeta) {
-            Spacer(GlanceModifier.height(4.dp))
+            Spacer(GlanceModifier.height(2.dp))
             if (model.alertText != null) {
                 AlertLabel(
                     context = context,
@@ -549,24 +554,51 @@ private fun CompactWeatherBody(
                     alert = model.alert,
                     modifier = GlanceModifier.fillMaxWidth().height(18.dp),
                 )
+                Spacer(GlanceModifier.height(2.dp))
             } else {
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth().height(18.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                model.aqi?.let { aqi ->
                     Text(
-                        text = model.aqi.orEmpty(),
-                        modifier = GlanceModifier.defaultWeight(),
-                        style = tertiaryText(sizeSp = 9),
+                        text = aqi,
+                        style = tertiaryText(sizeSp = 11),
                         maxLines = 1,
                     )
-                    Text(
-                        text = model.updateText,
-                        style = tertiaryText(sizeSp = 9, align = TextAlign.End),
-                        maxLines = 1,
-                    )
+                    Spacer(GlanceModifier.height(2.dp))
                 }
             }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier.clickable(actionRunCallback<WeatherWidgetRefreshAction>()),
+            ) {
+                Text(
+                    text = model.cityName,
+                    style = secondaryText(sizeSp = 12, weight = FontWeight.Medium),
+                    maxLines = 1,
+                )
+                Spacer(GlanceModifier.width(4.dp))
+                Image(
+                    provider = ImageProvider(R.drawable.weather_widget_refresh),
+                    contentDescription = context.getString(
+                        R.string.weather_widget_refresh_content_description,
+                    ),
+                    modifier = GlanceModifier.size(12.dp),
+                    colorFilter = whiteTint(),
+                )
+            }
+        }
+
+        Spacer(GlanceModifier.width(6.dp))
+
+        Box(
+            modifier = GlanceModifier.size(76.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                provider = ImageProvider(model.weatherIconRes),
+                contentDescription = model.condition,
+                modifier = GlanceModifier.size(68.dp),
+                contentScale = ContentScale.Fit,
+                colorFilter = whiteTint(),
+            )
         }
     }
 }

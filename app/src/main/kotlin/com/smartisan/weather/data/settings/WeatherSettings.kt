@@ -89,11 +89,25 @@ class WeatherSettings private constructor(context: Context) {
         }
     }
 
+    /** 读取小部件背景风格：0=全透明（默认），1=半透明磨砂，2=经典天空卡片。 */
+    suspend fun readWidgetBackgroundStyle(appWidgetId: Int): Int {
+        val key = widgetBgKey(appWidgetId)
+        return preferences.first()[key] ?: WIDGET_BG_STYLE_TRANSPARENT
+    }
+
+    suspend fun setWidgetBackgroundStyle(appWidgetId: Int, style: Int) {
+        require(appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID)
+        appContext.weatherDataStore.edit { preferences ->
+            preferences[widgetBgKey(appWidgetId)] = style
+        }
+    }
+
     suspend fun removeWidgetCitySelections(appWidgetIds: IntArray) {
         if (appWidgetIds.isEmpty()) return
         appContext.weatherDataStore.edit { preferences ->
             appWidgetIds.forEach { appWidgetId ->
                 preferences.remove(widgetCityKey(appWidgetId))
+                preferences.remove(widgetBgKey(appWidgetId))
             }
         }
     }
@@ -106,6 +120,11 @@ class WeatherSettings private constructor(context: Context) {
                 val newKey = widgetCityKey(newIds[index])
                 preferences[oldKey]?.let { selection -> preferences[newKey] = selection }
                 preferences.remove(oldKey)
+
+                val oldBgKey = widgetBgKey(oldIds[index])
+                val newBgKey = widgetBgKey(newIds[index])
+                preferences[oldBgKey]?.let { style -> preferences[newBgKey] = style }
+                preferences.remove(oldBgKey)
             }
         }
     }
@@ -117,6 +136,11 @@ class WeatherSettings private constructor(context: Context) {
         const val UNIT_CELSIUS = 1
         const val UNIT_FAHRENHEIT = 2
         private const val WIDGET_CITY_KEY_PREFIX = "weather_widget_city_"
+        private const val WIDGET_BG_KEY_PREFIX = "weather_widget_bg_"
+
+        const val WIDGET_BG_STYLE_TRANSPARENT = 0
+        const val WIDGET_BG_STYLE_TRANSLUCENT = 1
+        const val WIDGET_BG_STYLE_CLASSIC = 2
 
         @Volatile
         private var instance: WeatherSettings? = null
@@ -128,5 +152,8 @@ class WeatherSettings private constructor(context: Context) {
 
         private fun widgetCityKey(appWidgetId: Int) =
             stringPreferencesKey("$WIDGET_CITY_KEY_PREFIX$appWidgetId")
+
+        private fun widgetBgKey(appWidgetId: Int) =
+            intPreferencesKey("$WIDGET_BG_KEY_PREFIX$appWidgetId")
     }
 }

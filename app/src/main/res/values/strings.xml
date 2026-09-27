@@ -163,4 +163,8 @@
     <string name="weather_widget_preview_temperature">25°</string>
     <string name="weather_widget_preview_low_high">18° / 29°</string>
     <string name="weather_widget_preview_aqi">AQI 42 Excellent</string>
+    <string name="weather_widget_bg_transparent">Transparent</string>
+    <string name="weather_widget_bg_translucent">Translucent</string>
+    <string name="weather_widget_bg_classic">Classic Card</string>
+    <string name="weather_widget_configure_bg_hint">Widget Background</string>
 </resources>

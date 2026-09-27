@@ -159,4 +159,8 @@
     <string name="weather_widget_preview_temperature">25°</string>
     <string name="weather_widget_preview_low_high">18° / 29°</string>
     <string name="weather_widget_preview_aqi">空气质量 42 优</string>
+    <string name="weather_widget_bg_transparent">全透明（适配壁纸）</string>
+    <string name="weather_widget_bg_translucent">半透明磨砂</string>
+    <string name="weather_widget_bg_classic">经典天空卡片</string>
+    <string name="weather_widget_configure_bg_hint">小部件背景风格</string>
 </resources>

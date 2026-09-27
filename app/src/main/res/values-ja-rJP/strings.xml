@@ -154,4 +154,8 @@
     <string name="wind_dir_8">北風</string>
     <string name="wind_dir_9">回転式風</string>
     <string name="complete">完了</string>
+    <string name="weather_widget_bg_transparent">透明（壁紙対応）</string>
+    <string name="weather_widget_bg_translucent">半透明すりガラス</string>
+    <string name="weather_widget_bg_classic">クラシックカード</string>
+    <string name="weather_widget_configure_bg_hint">ウィジェットの背景スタイル</string>
 </resources>

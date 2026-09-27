@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 class WeatherWidgetConfigureActivity : WeatherEdgeToEdgeActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var selectedCityKey by mutableStateOf(AUTO_CITY_SELECTION)
+    private var selectedBgStyle by mutableIntStateOf(WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT)
     private var canRefresh = false
     private var ready by mutableStateOf(false)
     private var setupComplete by mutableStateOf(false)
@@ -69,6 +70,8 @@ class WeatherWidgetConfigureActivity : WeatherEdgeToEdgeActivity() {
         }
 
         selectedCityKey = savedInstanceState?.getString("selectedCityKey") ?: AUTO_CITY_SELECTION
+        selectedBgStyle = savedInstanceState?.getInt("selectedBgStyle", WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT)
+            ?: WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT
         setContent {
             WeatherWidgetConfigurationScreen(
                 choices = buildList {
@@ -79,6 +82,8 @@ class WeatherWidgetConfigureActivity : WeatherEdgeToEdgeActivity() {
                 setupComplete = setupComplete,
                 hasCities = cities.isNotEmpty(),
                 ready = ready,
+                selectedBgStyle = selectedBgStyle,
+                onSelectBgStyle = { selectedBgStyle = it },
                 onSelect = { selectedCityKey = it },
                 onCancel = ::finish,
                 onDone = ::saveAndFinish,
@@ -90,6 +95,7 @@ class WeatherWidgetConfigureActivity : WeatherEdgeToEdgeActivity() {
             cities = if (setupComplete) CityRepository(this@WeatherWidgetConfigureActivity).savedCities.first() else emptyList()
             if (savedInstanceState == null) {
                 selectedCityKey = settings.readWidgetCitySelections(intArrayOf(appWidgetId))[appWidgetId] ?: AUTO_CITY_SELECTION
+                selectedBgStyle = settings.readWidgetBackgroundStyle(appWidgetId)
             }
             if (cities.none { it.locationKey == selectedCityKey }) selectedCityKey = AUTO_CITY_SELECTION
             canRefresh = setupComplete && cities.isNotEmpty()
@@ -99,6 +105,7 @@ class WeatherWidgetConfigureActivity : WeatherEdgeToEdgeActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("selectedCityKey", selectedCityKey)
+        outState.putInt("selectedBgStyle", selectedBgStyle)
         super.onSaveInstanceState(outState)
     }
 
@@ -113,8 +120,9 @@ class WeatherWidgetConfigureActivity : WeatherEdgeToEdgeActivity() {
         if (!ready) return
         ready = false
         lifecycleScope.launch {
-            WeatherSettings.getInstance(this@WeatherWidgetConfigureActivity)
-                .setWidgetCitySelection(appWidgetId, selectedCityKey)
+            val settings = WeatherSettings.getInstance(this@WeatherWidgetConfigureActivity)
+            settings.setWidgetCitySelection(appWidgetId, selectedCityKey)
+            settings.setWidgetBackgroundStyle(appWidgetId, selectedBgStyle)
             WeatherWidgetUpdater.renderCached(
                 context = this@WeatherWidgetConfigureActivity,
                 requestedIds = intArrayOf(appWidgetId),
@@ -143,10 +151,17 @@ internal fun WeatherWidgetConfigurationScreen(
     setupComplete: Boolean,
     hasCities: Boolean,
     ready: Boolean,
+    selectedBgStyle: Int = WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT,
+    onSelectBgStyle: (Int) -> Unit = {},
     onSelect: (String) -> Unit,
     onCancel: () -> Unit,
     onDone: () -> Unit,
 ) {
+    val bgChoices = listOf(
+        WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT to stringResource(R.string.weather_widget_bg_transparent),
+        WeatherSettings.WIDGET_BG_STYLE_TRANSLUCENT to stringResource(R.string.weather_widget_bg_translucent),
+        WeatherSettings.WIDGET_BG_STYLE_CLASSIC to stringResource(R.string.weather_widget_bg_classic),
+    )
     WeatherScreenFrame {
         Column(Modifier.fillMaxSize()) {
             WeatherTitleBar(
@@ -156,40 +171,36 @@ internal fun WeatherWidgetConfigurationScreen(
                 onLeft = onCancel,
             )
             if (setupComplete && hasCities) {
-                WeatherText(
-                    stringResource(R.string.weather_widget_configure_hint),
-                    Modifier.padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 12.dp),
-                    color = colorResource(R.color.item_pager_content_text_content_color),
-                    fontSize = 13.sp,
-                )
-                LazyColumn(Modifier.weight(1f).selectableGroup(), contentPadding = PaddingValues(bottom = 16.dp)) {
+                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
+                    item {
+                        WeatherText(
+                            stringResource(R.string.weather_widget_configure_bg_hint),
+                            Modifier.padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 12.dp),
+                            color = colorResource(R.color.item_pager_content_text_content_color),
+                            fontSize = 13.sp,
+                        )
+                    }
+                    items(bgChoices, key = { it.first }) { (style, label) ->
+                        ConfigurationChoiceRow(
+                            label = label,
+                            selected = style == selectedBgStyle,
+                            onSelect = { onSelectBgStyle(style) },
+                        )
+                    }
+                    item {
+                        WeatherText(
+                            stringResource(R.string.weather_widget_configure_hint),
+                            Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 12.dp),
+                            color = colorResource(R.color.item_pager_content_text_content_color),
+                            fontSize = 13.sp,
+                        )
+                    }
                     items(choices, key = { it.first }) { (key, label) ->
-                        val interactions = remember { MutableInteractionSource() }
-                        val pressed by interactions.collectWeatherPressedAsState()
-                        val selected = key == selectedKey
-                        Row(
-                            Modifier.fillMaxWidth().height(52.dp)
-                                .weatherDrawableBackground(R.drawable.selector_listitem, pressed = pressed)
-                                .selectable(selected, interactions, indication = null, role = Role.RadioButton, onClick = { onSelect(key) })
-                                .padding(horizontal = 24.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            WeatherText(label, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            val context = LocalContext.current
-                            val configuration = LocalConfiguration.current
-                            val indicator = remember(context, configuration) {
-                                context.obtainStyledAttributes(intArrayOf(android.R.attr.listChoiceIndicatorSingle)).let { attributes ->
-                                    try { requireNotNull(attributes.getDrawable(0)).mutate() } finally { attributes.recycle() }
-                                }
-                            }
-                            Image(
-                                painter = rememberWeatherDrawablePainter(indicator, pressed = pressed, checked = selected),
-                                contentDescription = null,
-                                modifier = Modifier.padding(start = 12.dp).size(32.dp),
-                                contentScale = ContentScale.Inside,
-                            )
-                        }
-                        Spacer(Modifier.fillMaxWidth().height(0.5.dp).background(colorResource(R.color.divider_listview)))
+                        ConfigurationChoiceRow(
+                            label = label,
+                            selected = key == selectedKey,
+                            onSelect = { onSelect(key) },
+                        )
                     }
                 }
             } else {
@@ -208,8 +219,35 @@ internal fun WeatherWidgetConfigurationScreen(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun WidgetConfigurationPreview() {
-    WeatherWidgetConfigurationScreen(listOf("" to "自动选择", "101010100" to "北京"), "", true, true, true, {}, {}, {})
+private fun ConfigurationChoiceRow(
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+) {
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectWeatherPressedAsState()
+    Row(
+        Modifier.fillMaxWidth().height(52.dp)
+            .weatherDrawableBackground(R.drawable.selector_listitem, pressed = pressed)
+            .selectable(selected, interactions, indication = null, role = Role.RadioButton, onClick = onSelect)
+            .padding(horizontal = 24.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        WeatherText(label, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val context = LocalContext.current
+        val configuration = LocalConfiguration.current
+        val indicator = remember(context, configuration) {
+            context.obtainStyledAttributes(intArrayOf(android.R.attr.listChoiceIndicatorSingle)).let { attributes ->
+                try { requireNotNull(attributes.getDrawable(0)).mutate() } finally { attributes.recycle() }
+            }
+        }
+        Image(
+            painter = rememberWeatherDrawablePainter(indicator, pressed = pressed, checked = selected),
+            contentDescription = null,
+            modifier = Modifier.padding(start = 12.dp).size(32.dp),
+            contentScale = ContentScale.Inside,
+        )
+    }
+    Spacer(Modifier.fillMaxWidth().height(0.5.dp).background(colorResource(R.color.divider_listview)))
 }
