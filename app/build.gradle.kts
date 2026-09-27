@@ -54,9 +54,9 @@ android {
 
     buildTypes {
         release {
-            // Stays null when the RELEASE_* values are absent, which keeps the
-            // variant unsigned instead of breaking configuration.
-            signingConfig = signingConfigs.findByName("release")
+            // Falls back to the default debug key when the RELEASE_* values are absent,
+            // ensuring the release APK is still signed and installable on test devices.
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             optimization {
