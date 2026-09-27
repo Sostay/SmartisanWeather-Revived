@@ -446,7 +446,7 @@ private fun ReadyWidget(
             appWidgetId = appWidgetId,
             model = model,
             spec = spec,
-            modifier = GlanceModifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 4.dp),
+            modifier = GlanceModifier.fillMaxSize().padding(horizontal = 4.dp, vertical = 2.dp),
         )
     }
 }
@@ -521,7 +521,10 @@ private fun CompactWeatherBody(
         verticalAlignment = Alignment.Top,
     ) {
         Column(
-            modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+            modifier = GlanceModifier
+                .defaultWeight()
+                .fillMaxHeight()
+                .padding(start = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
             Text(
@@ -586,16 +589,16 @@ private fun CompactWeatherBody(
             }
         }
 
-        Spacer(GlanceModifier.width(6.dp))
+        Spacer(GlanceModifier.width(4.dp))
 
         Box(
-            modifier = GlanceModifier.size(108.dp),
-            contentAlignment = Alignment.TopCenter,
+            modifier = GlanceModifier.width(112.dp).fillMaxHeight(),
+            contentAlignment = Alignment.TopEnd,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.size(102.dp),
+                modifier = GlanceModifier.width(112.dp).height(130.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
