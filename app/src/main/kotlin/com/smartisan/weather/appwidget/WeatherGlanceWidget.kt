@@ -3,7 +3,6 @@ package com.smartisan.weather.appwidget
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,6 +61,7 @@ import com.smartisan.weather.data.model.WeatherAlert
 import com.smartisan.weather.data.settings.WeatherSettings
 import com.smartisan.weather.data.weather.WeatherRepository
 import com.smartisan.weather.ui.alert.WeatherAlertActivity
+import com.smartisan.weather.util.ResMappingUtil
 import com.smartisan.weather.util.ThemeUtils
 import com.smartisan.weather.util.WeatherCodeMapping
 import java.text.SimpleDateFormat
@@ -144,6 +144,7 @@ private sealed interface WeatherWidgetDisplayModel {
         val temperature: String,
         val temperatureRange: String?,
         val aqi: String?,
+        val detailMetrics: List<String>,
         val updateText: String,
         val alertText: String?,
         val alert: WeatherAlert,
@@ -198,6 +199,7 @@ private object WeatherWidgetDisplayModelLoader {
             ),
             temperatureRange = temperatureRangeText(context, content),
             aqi = aqiText(context, content),
+            detailMetrics = detailMetrics(context, content),
             updateText = updateText(context, snapshot.updatedAtMillis, updateState),
             alertText = snapshot.weather.alert.first?.let { first ->
                 context.getString(R.string.weather_alert_tip, first.type, first.level)
@@ -258,6 +260,48 @@ private object WeatherWidgetDisplayModelLoader {
         val level = WeatherCodeMapping.AqiLevel.getLevel(aqi)
         val levelText = context.getString(WeatherCodeMapping.AqiLevel.levelTextRes[level])
         return context.getString(R.string.weather_widget_aqi, aqi, levelText)
+    }
+
+    /**
+     * Extra real-valued observations for the wide layout. A row is only produced when the field
+     * actually exists, so a global AccuWeather city simply shows fewer rows instead of invented
+     * numbers, and the wind text reuses the same fallback chain and code mapping as the screen.
+     */
+    private fun detailMetrics(context: Context, content: WeatherWidgetContent): List<String> {
+        val metrics = mutableListOf<String>()
+        content.feelsLikeTemperature?.let {
+            metrics += context.getString(
+                R.string.weather_widget_feels_like,
+                context.getString(R.string.weather_widget_temperature, it),
+            )
+        }
+        content.humidity?.let {
+            metrics += context.getString(R.string.weather_widget_humidity, "$it%")
+        }
+        val direction = windDirectionText(context, content.windDirection)
+        val speed = content.windSpeed?.let {
+            it + context.getString(R.string.weather_forecast_wind_level)
+        }
+        when {
+            direction != null && speed != null ->
+                metrics += context.getString(R.string.weather_widget_wind, direction, speed)
+            else -> {
+                direction?.let { metrics += it }
+                speed?.let { metrics += it }
+            }
+        }
+        return metrics
+    }
+
+    private fun windDirectionText(context: Context, code: String?): String? {
+        val value = code?.trim().orEmpty()
+        if (value.isEmpty()) return null
+        // Observe.wind is the original wind-direction code and must never be printed raw.
+        return if (value.toIntOrNull() != null) {
+            context.getString(ResMappingUtil.getWindDirRedId(value))
+        } else {
+            value
+        }
     }
 
     private fun updateText(
@@ -321,20 +365,22 @@ private fun WeatherWidgetSurface(
     }
 }
 
-private fun weatherWidgetBackground(infoBackgroundRes: Int): Int {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return infoBackgroundRes
-
-    return when (infoBackgroundRes) {
-        R.drawable.bg_weather_info_sunny -> R.drawable.weather_widget_background_sunny
-        R.drawable.bg_weather_info_cloud -> R.drawable.weather_widget_background_cloud
-        R.drawable.bg_weather_info_overcast -> R.drawable.weather_widget_background_overcast
-        R.drawable.bg_weather_info_rain -> R.drawable.weather_widget_background_rain
-        R.drawable.bg_weather_info_snow -> R.drawable.weather_widget_background_snow
-        R.drawable.bg_weather_info_foggy -> R.drawable.weather_widget_background_foggy
-        R.drawable.bg_weather_info_haze -> R.drawable.weather_widget_background_haze
-        R.drawable.bg_weather_info_sandstorm -> R.drawable.weather_widget_background_sandstorm
-        else -> R.drawable.weather_widget_background_error
-    }
+/**
+ * Always renders through the widget layer-list, including below API 31: the scrim inside it is
+ * what keeps the white widget type readable over the pale original sky artwork, and the host
+ * outline it escapes only exists on API 31+. On older releases the negative inset is a no-op
+ * crop, so there is nothing to gain by bypassing the wrapper.
+ */
+private fun weatherWidgetBackground(infoBackgroundRes: Int): Int = when (infoBackgroundRes) {
+    R.drawable.bg_weather_info_sunny -> R.drawable.weather_widget_background_sunny
+    R.drawable.bg_weather_info_cloud -> R.drawable.weather_widget_background_cloud
+    R.drawable.bg_weather_info_overcast -> R.drawable.weather_widget_background_overcast
+    R.drawable.bg_weather_info_rain -> R.drawable.weather_widget_background_rain
+    R.drawable.bg_weather_info_snow -> R.drawable.weather_widget_background_snow
+    R.drawable.bg_weather_info_foggy -> R.drawable.weather_widget_background_foggy
+    R.drawable.bg_weather_info_haze -> R.drawable.weather_widget_background_haze
+    R.drawable.bg_weather_info_sandstorm -> R.drawable.weather_widget_background_sandstorm
+    else -> R.drawable.weather_widget_background_error
 }
 
 @Composable
@@ -369,7 +415,7 @@ private fun ReadyWidget(
         modifier = GlanceModifier.fillMaxSize().padding(spec.outerPaddingDp.dp),
     ) {
         WidgetHeader(context, appWidgetId, model, spec)
-        Spacer(GlanceModifier.height(if (spec.isWide) 3.dp else 5.dp))
+        Spacer(GlanceModifier.height(spec.bodyGapDp.dp))
         if (spec.isWide) {
             WideWeatherBody(
                 context = context,
@@ -398,7 +444,7 @@ private fun WidgetHeader(
     spec: WeatherWidgetLayoutSpec,
 ) {
     Row(
-        modifier = GlanceModifier.fillMaxWidth().height(32.dp),
+        modifier = GlanceModifier.fillMaxWidth().height(spec.headerHeightDp.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -428,7 +474,7 @@ private fun WidgetHeader(
         }
         Box(
             modifier = GlanceModifier
-                .size(32.dp)
+                .size(spec.headerHeightDp.dp)
                 .background(
                     imageProvider = ImageProvider(R.drawable.weather_widget_action_background),
                     contentScale = ContentScale.FillBounds,
@@ -464,7 +510,7 @@ private fun CompactWeatherBody(
                 text = model.temperature,
                 modifier = GlanceModifier.defaultWeight(),
                 style = primaryText(
-                    sizeSp = spec.currentTemperatureSp,
+                    sizeSp = spec.temperatureSp,
                     weight = FontWeight.Bold,
                 ),
                 maxLines = 1,
@@ -570,7 +616,7 @@ private fun CurrentConditions(
         Text(
             text = model.temperature,
             modifier = GlanceModifier.fillMaxWidth(),
-            style = primaryText(sizeSp = spec.currentTemperatureSp, weight = FontWeight.Bold),
+            style = primaryText(sizeSp = spec.temperatureSp, weight = FontWeight.Bold),
             maxLines = 1,
         )
         Row(
@@ -595,8 +641,13 @@ private fun CurrentConditions(
                 Text(text = it, style = secondaryText(sizeSp = 9), maxLines = 1)
             }
         }
-        model.aqi?.let {
-            Text(text = it, style = tertiaryText(sizeSp = 9), maxLines = 1)
+        if (spec.showWideAqi) {
+            model.aqi?.let {
+                Text(text = it, style = tertiaryText(sizeSp = 9), maxLines = 1)
+            }
+        }
+        model.detailMetrics.take(spec.detailMetricSlots).forEach { metric ->
+            Text(text = metric, style = tertiaryText(sizeSp = 9), maxLines = 1)
         }
     }
 }

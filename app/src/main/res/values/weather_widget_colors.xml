@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      桌面小组件专属配色。集中在这里方便统一微调，改这里即可影响所有
+      weather_widget_* 背景、卡片和按钮，不需要逐个改 drawable。
+    -->
+    <!--
+      原版 bg_weather_info_*.9.png 实际是很浅的蓝色渐变，而小组件文字是纯白，
+      两者几乎分不开。压一层黑色蒙版把背景压暗，白字才有对比度；想更接近
+      原版观感就把 alpha 调小，想更清晰就调大。
+    -->
+    <color name="weather_widget_artwork_scrim">#59000000</color>
+    <!-- 预报条玻璃卡：底色 + 描边，圆角在 weather_widget_forecast_panel.xml -->
+    <color name="weather_widget_panel_fill">#1AFFFFFF</color>
+    <color name="weather_widget_panel_stroke">#24FFFFFF</color>
+    <!-- 刷新按钮按下反馈，默认态保持全透明 -->
+    <color name="weather_widget_action_pressed">#38FFFFFF</color>
+</resources>

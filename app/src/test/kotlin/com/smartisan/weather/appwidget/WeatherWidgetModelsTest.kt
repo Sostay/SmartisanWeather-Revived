@@ -163,6 +163,7 @@ class WeatherWidgetModelsTest {
         val mediumWide = WeatherWidgetLayoutSpec.fromSize(widthDp = 300, heightDp = 148)
         val wide = WeatherWidgetLayoutSpec.fromSize(widthDp = 360, heightDp = 128)
         val expandedWide = WeatherWidgetLayoutSpec.fromSize(widthDp = 360, heightDp = 148)
+        val roomyWide = WeatherWidgetLayoutSpec.fromSize(widthDp = 360, heightDp = 220)
 
         assertEquals(false, compact.isWide)
         assertEquals(true, compact.showMeta)
@@ -173,7 +174,62 @@ class WeatherWidgetModelsTest {
         assertEquals(118, wide.currentColumnWidthDp)
         assertEquals(10, wide.outerPaddingDp)
         assertEquals(12, expandedWide.outerPaddingDp)
-        assertEquals(36, wide.currentTemperatureSp)
+        assertEquals(37, wide.temperatureSp)
+        assertEquals(true, wide.showWideAqi)
+        assertEquals(0, wide.detailMetricSlots)
+        assertEquals(3, roomyWide.detailMetricSlots)
+    }
+
+    @Test
+    fun heroTypeSizeFollowsAvailableHeightAndStaysInsideTheOriginalAutoSizeRange() {
+        val shortSquare = WeatherWidgetLayoutSpec.fromSize(widthDp = 110, heightDp = 110)
+        val midSquare = WeatherWidgetLayoutSpec.fromSize(widthDp = 110, heightDp = 138)
+        val tallPanel = WeatherWidgetLayoutSpec.fromSize(widthDp = 110, heightDp = 190)
+        val crampedWide = WeatherWidgetLayoutSpec.fromSize(widthDp = 250, heightDp = 110)
+
+        // The original RemoteViews layout used autoSizeTextType 32sp..44sp; keep that contract.
+        assertEquals(32, shortSquare.temperatureSp)
+        assertEquals(32, midSquare.temperatureSp)
+        assertEquals(44, tallPanel.temperatureSp)
+        assertEquals(false, shortSquare.showMeta)
+        assertEquals(true, midSquare.showMeta)
+        // A short wide panel gives up the AQI line before it squeezes the hero temperature.
+        assertEquals(false, crampedWide.showWideAqi)
+        assertEquals(32, crampedWide.temperatureSp)
+        assertEquals(0, crampedWide.detailMetricSlots)
+    }
+
+    @Test
+    fun optionalObservationsAreCarriedOnlyWhenTheProviderReturnedThem() {
+        val reported = WeatherWidgetContentFactory.create(
+            weather = Weather(
+                observe = Observe(
+                    tempC = "25",
+                    tempF = "77",
+                    code = "01",
+                    bodyFeelC = "26",
+                    bodyFeelF = "79",
+                    humidity = "65",
+                    wind = "3",
+                    speed = "2",
+                ),
+            ),
+            tempUnit = WeatherSettings.UNIT_CELSIUS,
+        )
+        val bare = WeatherWidgetContentFactory.create(
+            weather = Weather(observe = Observe(tempC = "25", tempF = "77", code = "01")),
+            tempUnit = WeatherSettings.UNIT_CELSIUS,
+        )
+
+        assertEquals("26", reported.feelsLikeTemperature)
+        assertEquals("65", reported.humidity)
+        assertEquals("3", reported.windDirection)
+        assertEquals("2", reported.windSpeed)
+
+        assertNull(bare.feelsLikeTemperature)
+        assertNull(bare.humidity)
+        assertNull(bare.windDirection)
+        assertNull(bare.windSpeed)
     }
 
     private fun city(key: String, order: Int) = SavedCity(

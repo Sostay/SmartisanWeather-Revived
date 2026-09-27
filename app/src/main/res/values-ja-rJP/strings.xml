@@ -131,6 +131,9 @@
     <string name="weather_widget_high">最高 %1$s°</string>
     <string name="weather_widget_low">最低 %1$s°</string>
     <string name="weather_widget_aqi">空気質 %1$d %2$s</string>
+    <string name="weather_widget_feels_like">体感 %1$s</string>
+    <string name="weather_widget_humidity">湿度 %1$s</string>
+    <string name="weather_widget_wind">%1$s · %2$s</string>
     <string name="weather_widget_now">現在</string>
     <string name="weather_widget_hour_format">%1$d時</string>
     <string name="weather_widget_refresh_content_description">天気を更新</string>

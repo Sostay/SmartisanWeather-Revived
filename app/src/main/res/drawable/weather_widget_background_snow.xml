@@ -6,4 +6,5 @@
         android:left="@dimen/weather_widget_background_artwork_inset"
         android:right="@dimen/weather_widget_background_artwork_inset"
         android:top="@dimen/weather_widget_background_artwork_inset" />
+    <item android:drawable="@color/weather_widget_artwork_scrim" />
 </layer-list>

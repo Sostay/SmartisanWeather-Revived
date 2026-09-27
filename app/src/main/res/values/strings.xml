@@ -152,6 +152,9 @@
     <string name="weather_widget_high">High %1$s°</string>
     <string name="weather_widget_low">Low %1$s°</string>
     <string name="weather_widget_aqi">AQI %1$d %2$s</string>
+    <string name="weather_widget_feels_like">Feels like %1$s</string>
+    <string name="weather_widget_humidity">Humidity %1$s</string>
+    <string name="weather_widget_wind">%1$s · %2$s</string>
     <string name="weather_widget_now">Now</string>
     <string name="weather_widget_hour_format">%1$02d:00</string>
     <string name="weather_widget_refresh_content_description">Refresh weather</string>

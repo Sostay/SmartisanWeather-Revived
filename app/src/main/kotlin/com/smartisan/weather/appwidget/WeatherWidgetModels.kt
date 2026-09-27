@@ -34,36 +34,98 @@ internal enum class WeatherWidgetEmptyState {
     WEATHER_UNAVAILABLE,
 }
 
-/** A single composition whose rhythm scales with the exact space assigned by the launcher. */
+/**
+ * A single composition whose rhythm scales with the exact space assigned by the launcher.
+ *
+ * The original RemoteViews layout sized the hero temperature with `autoSizeTextType` inside
+ * a fixed row, i.e. it shrank to fit whatever the launcher granted. Glance has no autosize,
+ * so the same contract is reproduced here in Kotlin: measure the box, subtract the rows that
+ * must survive (header, gap, condition, and whichever optional rows still fit), then turn
+ * what is left into a type size. That keeps a 130dp strip from clipping the way a fixed
+ * ladder of sizes did, and lets a 4x4 panel keep its artwork from looking under-filled.
+ */
 internal data class WeatherWidgetLayoutSpec(
     val isWide: Boolean,
     val outerPaddingDp: Int,
-    val currentTemperatureSp: Int,
+    val headerHeightDp: Int,
+    val bodyGapDp: Int,
+    val temperatureSp: Int,
     val currentColumnWidthDp: Int,
     val forecastSlots: Int,
     val showMeta: Boolean,
+    val showWideAqi: Boolean,
+    val detailMetricSlots: Int,
 ) {
     companion object {
         fun fromSize(widthDp: Int, heightDp: Int): WeatherWidgetLayoutSpec {
-            val wide = widthDp >= 250
-            val roomy = heightDp >= 148
+            val wide = widthDp >= WIDE_MIN_WIDTH_DP
+            val paddingDp = if (widthDp < TIGHT_MAX_WIDTH_DP || heightDp < TIGHT_MAX_HEIGHT_DP) {
+                TIGHT_PADDING_DP
+            } else {
+                ROOMY_PADDING_DP
+            }
+            val gapDp = if (wide) WIDE_BODY_GAP_DP else COMPACT_BODY_GAP_DP
+            val metaBlockDp = if (heightDp >= META_MIN_HEIGHT_DP) META_BLOCK_DP else 0
+            val bodyDp = heightDp - 2 * paddingDp - HEADER_HEIGHT_DP - gapDp
+
+            // The wide column also carries the AQI line, so it gets the shorter budget; the
+            // AQI line is dropped first when the panel is too short to hold it.
+            val showWideAqi = wide && bodyDp - CONDITION_ROW_DP - AQI_ROW_DP >= MIN_HERO_DP
+            val heroDp = bodyDp - CONDITION_ROW_DP - metaBlockDp -
+                if (showWideAqi) AQI_ROW_DP else 0
+            val temperatureSp = (heroDp / LINE_HEIGHT_RATIO)
+                .toInt()
+                .coerceIn(MIN_TEMPERATURE_SP, MAX_TEMPERATURE_SP)
+
+            val leftoverDp = bodyDp - (temperatureSp * LINE_HEIGHT_RATIO).toInt() -
+                CONDITION_ROW_DP - if (showWideAqi) AQI_ROW_DP else 0 - metaBlockDp
+
             return WeatherWidgetLayoutSpec(
                 isWide = wide,
-                outerPaddingDp = if (widthDp < 145 || heightDp < 130) 10 else 12,
-                currentTemperatureSp = when {
-                    wide -> 36
-                    roomy -> 42
-                    else -> 36
-                },
-                currentColumnWidthDp = (widthDp * 0.33f).toInt().coerceIn(108, 132),
+                outerPaddingDp = paddingDp,
+                headerHeightDp = HEADER_HEIGHT_DP,
+                bodyGapDp = gapDp,
+                temperatureSp = temperatureSp,
+                currentColumnWidthDp = (widthDp * CURRENT_COLUMN_RATIO)
+                    .toInt()
+                    .coerceIn(CURRENT_COLUMN_MIN_DP, CURRENT_COLUMN_MAX_DP),
                 forecastSlots = when {
-                    widthDp >= 330 -> 4
-                    widthDp >= 280 -> 3
+                    widthDp >= FORECAST_FOUR_SLOT_WIDTH_DP -> 4
+                    widthDp >= FORECAST_THREE_SLOT_WIDTH_DP -> 3
                     else -> 2
                 },
-                showMeta = heightDp >= 138,
+                showMeta = heightDp >= META_MIN_HEIGHT_DP,
+                showWideAqi = showWideAqi,
+                detailMetricSlots = (leftoverDp / DETAIL_ROW_DP).coerceIn(
+                    0,
+                    MAX_DETAIL_METRIC_SLOTS,
+                ),
             )
         }
+
+        private const val WIDE_MIN_WIDTH_DP = 250
+        private const val TIGHT_MAX_WIDTH_DP = 145
+        private const val TIGHT_MAX_HEIGHT_DP = 130
+        private const val META_MIN_HEIGHT_DP = 138
+        private const val TIGHT_PADDING_DP = 10
+        private const val ROOMY_PADDING_DP = 12
+        private const val HEADER_HEIGHT_DP = 30
+        private const val COMPACT_BODY_GAP_DP = 5
+        private const val WIDE_BODY_GAP_DP = 3
+        private const val CONDITION_ROW_DP = 18
+        private const val AQI_ROW_DP = 12
+        private const val META_BLOCK_DP = 22
+        private const val DETAIL_ROW_DP = 14
+        private const val MAX_DETAIL_METRIC_SLOTS = 3
+        private const val LINE_HEIGHT_RATIO = 1.2f
+        private const val MIN_TEMPERATURE_SP = 32
+        private const val MAX_TEMPERATURE_SP = 44
+        private const val MIN_HERO_DP = 38
+        private const val CURRENT_COLUMN_RATIO = 0.33f
+        private const val CURRENT_COLUMN_MIN_DP = 108
+        private const val CURRENT_COLUMN_MAX_DP = 132
+        private const val FORECAST_FOUR_SLOT_WIDTH_DP = 330
+        private const val FORECAST_THREE_SLOT_WIDTH_DP = 280
     }
 }
 
@@ -77,6 +139,10 @@ internal data class WeatherWidgetForecastSlot(
 internal data class WeatherWidgetContent(
     val code: String,
     val currentTemperature: String?,
+    val feelsLikeTemperature: String?,
+    val humidity: String?,
+    val windDirection: String?,
+    val windSpeed: String?,
     val highTemperature: String?,
     val lowTemperature: String?,
     val isNight: Boolean,
@@ -111,6 +177,11 @@ internal object WeatherWidgetContentFactory {
             code = weather.themeCode,
             currentTemperature = (if (isCelsius) observe.tempC else observe.tempF)
                 .temperatureOrNull(),
+            feelsLikeTemperature = (if (isCelsius) observe.bodyFeelC else observe.bodyFeelF)
+                .temperatureOrNull(),
+            humidity = observe.humidity.ifBlank { weather.relativeHumidity }.valueOrNull(),
+            windDirection = observe.wind.ifBlank { weather.windDirection }.valueOrNull(),
+            windSpeed = observe.speed.ifBlank { weather.windSpeed }.valueOrNull(),
             highTemperature = (if (isCelsius) observe.highTempC else observe.highTempF)
                 .temperatureOrNull()
                 ?: daily?.let { if (isCelsius) it.highTempC else it.highTempF }?.toString(),
@@ -125,6 +196,10 @@ internal object WeatherWidgetContentFactory {
     }
 
     private fun String.temperatureOrNull(): String? =
+        trim().takeUnless { it.isEmpty() || it.equals(UNKNOWN_TEMPERATURE, ignoreCase = true) }
+
+    /** Global AccuWeather cities carry no humidity, feels-like or wind; drop those instead of guessing. */
+    private fun String.valueOrNull(): String? =
         trim().takeUnless { it.isEmpty() || it.equals(UNKNOWN_TEMPERATURE, ignoreCase = true) }
 
     private fun isNight(weather: Weather, now: LocalTime): Boolean {
