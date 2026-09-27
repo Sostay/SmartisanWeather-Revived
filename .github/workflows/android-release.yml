@@ -40,23 +40,23 @@ jobs:
       # here, change this to a JDK that exists and Gradle will still fetch the
       # pinned 25 toolchain itself through the Foojay URLs in that file.
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "25"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Accept SDK licenses
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 \
+            || yes | sdkmanager --licenses > /dev/null 2>&1 \
+            || true
 
       - name: Install Android platform 37
         run: |
-          sdkmanager "platform-tools" "platforms;android-37" \
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-37" \
+            || sdkmanager "platform-tools" "platforms;android-37" \
             || echo "::warning::Manual platform install failed; letting the Android Gradle Plugin resolve it."
-          sdkmanager --list_installed || true
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --list_installed || sdkmanager --list_installed || true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
