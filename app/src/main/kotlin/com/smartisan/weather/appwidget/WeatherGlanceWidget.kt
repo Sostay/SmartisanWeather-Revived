@@ -527,17 +527,17 @@ private fun CompactWeatherBody(
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.width(152.dp).height(190.dp),
+                modifier = GlanceModifier.width(116.dp).height(145.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
         }
 
-        // Bottom-Left: Information column shifted towards top-right
+        // Bottom-Left: Information column anchored at bottom-left without overlapping the icon
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(start = 20.dp, bottom = 18.dp, end = 4.dp),
+                .padding(start = 16.dp, bottom = 16.dp, end = 4.dp),
             contentAlignment = Alignment.BottomStart,
         ) {
             Column(

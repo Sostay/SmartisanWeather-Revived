@@ -141,7 +141,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${GITHUB_REF_NAME}"
-          mapfile -t apks < <(find dist -name '*.apk' | sort)
+          # Only publish optimized release APKs to GitHub Releases, excluding debug builds
+          mapfile -t apks < <(find dist -path '*/release/*' -name '*.apk' | sort)
           if gh release view "$tag" > /dev/null 2>&1; then
             gh release upload "$tag" "${apks[@]}" --clobber
           else
