@@ -521,23 +521,23 @@ private fun CompactWeatherBody(
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(top = 0.dp, end = 2.dp),
+                .padding(top = 0.dp, end = 0.dp),
             contentAlignment = Alignment.TopEnd,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.size(116.dp),
+                modifier = GlanceModifier.size(128.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
         }
 
-        // Bottom-Left: Information column anchored at bottom-left with ample breathing room
+        // Bottom-Left: Information column shifted towards top-right
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(start = 14.dp, bottom = 12.dp, end = 4.dp),
+                .padding(start = 20.dp, bottom = 18.dp, end = 4.dp),
             contentAlignment = Alignment.BottomStart,
         ) {
             Column(
@@ -545,7 +545,7 @@ private fun CompactWeatherBody(
             ) {
                 Text(
                     text = model.temperature,
-                    style = primaryText(sizeSp = 62, weight = FontWeight.Bold),
+                    style = primaryText(sizeSp = 64, weight = FontWeight.Bold),
                     maxLines = 1,
                 )
                 Spacer(GlanceModifier.height(3.dp))
