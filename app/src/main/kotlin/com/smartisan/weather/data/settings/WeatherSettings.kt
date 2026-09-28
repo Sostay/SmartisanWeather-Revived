@@ -66,7 +66,7 @@ class WeatherSettings private constructor(context: Context) {
         if (keys.isEmpty()) return
         appContext.weatherDataStore.edit { prefs ->
             val current = prefs[KEY_NOTIFIED_ALERT_KEYS] ?: emptySet()
-            val updated = (current + keys).takeLast(100).toSet()
+            val updated = (current + keys).toList().takeLast(100).toSet()
             prefs[KEY_NOTIFIED_ALERT_KEYS] = updated
         }
     }
