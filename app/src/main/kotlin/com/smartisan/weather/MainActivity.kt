@@ -238,6 +238,12 @@ class MainActivity : WeatherEdgeToEdgeActivity() {
         pendingWidgetCityKey?.let(viewModel::focusCity)
         pendingWidgetCityKey = null
         weatherStarted = true
+        if (Build.VERSION.SDK_INT >= 33) {
+            val managerCompat = NotificationManagerCompat.from(this)
+            if (!managerCompat.areNotificationsEnabled()) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.uiState.first { it.citiesLoaded }

@@ -521,13 +521,13 @@ private fun CompactWeatherBody(
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(top = 4.dp, end = 6.dp),
+                .padding(top = 0.dp, end = 2.dp),
             contentAlignment = Alignment.TopEnd,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.size(96.dp),
+                modifier = GlanceModifier.size(116.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
@@ -537,7 +537,7 @@ private fun CompactWeatherBody(
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(start = 14.dp, bottom = 12.dp, end = 8.dp),
+                .padding(start = 14.dp, bottom = 12.dp, end = 4.dp),
             contentAlignment = Alignment.BottomStart,
         ) {
             Column(
@@ -545,26 +545,26 @@ private fun CompactWeatherBody(
             ) {
                 Text(
                     text = model.temperature,
-                    style = primaryText(sizeSp = 54, weight = FontWeight.Bold),
+                    style = primaryText(sizeSp = 62, weight = FontWeight.Bold),
                     maxLines = 1,
                 )
-                Spacer(GlanceModifier.height(1.dp))
+                Spacer(GlanceModifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = model.condition,
-                        style = primaryText(sizeSp = 15, weight = FontWeight.Medium),
+                        style = primaryText(sizeSp = 16, weight = FontWeight.Medium),
                         maxLines = 1,
                     )
                     model.temperatureRange?.let { range ->
                         Spacer(GlanceModifier.width(6.dp))
                         Text(
                             text = range,
-                            style = secondaryText(sizeSp = 13),
+                            style = secondaryText(sizeSp = 14),
                             maxLines = 1,
                         )
                     }
                 }
-                Spacer(GlanceModifier.height(2.dp))
+                Spacer(GlanceModifier.height(3.dp))
                 if (model.alertText != null) {
                     AlertLabel(
                         context = context,
@@ -573,15 +573,15 @@ private fun CompactWeatherBody(
                         alert = model.alert,
                         modifier = GlanceModifier.height(18.dp),
                     )
-                    Spacer(GlanceModifier.height(2.dp))
+                    Spacer(GlanceModifier.height(3.dp))
                 } else {
                     model.aqi?.let { aqi ->
                         Text(
                             text = aqi,
-                            style = tertiaryText(sizeSp = 13),
+                            style = tertiaryText(sizeSp = 14),
                             maxLines = 1,
                         )
-                        Spacer(GlanceModifier.height(2.dp))
+                        Spacer(GlanceModifier.height(3.dp))
                     }
                 }
                 Row(
@@ -590,7 +590,7 @@ private fun CompactWeatherBody(
                 ) {
                     Text(
                         text = model.cityName,
-                        style = secondaryText(sizeSp = 14, weight = FontWeight.Medium),
+                        style = secondaryText(sizeSp = 15, weight = FontWeight.Medium),
                         maxLines = 1,
                     )
                     Spacer(GlanceModifier.width(4.dp))
@@ -599,7 +599,7 @@ private fun CompactWeatherBody(
                         contentDescription = context.getString(
                             R.string.weather_widget_refresh_content_description,
                         ),
-                        modifier = GlanceModifier.size(13.dp),
+                        modifier = GlanceModifier.size(14.dp),
                         colorFilter = whiteTint(),
                     )
                 }
