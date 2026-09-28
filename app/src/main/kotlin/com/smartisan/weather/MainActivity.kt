@@ -5,11 +5,13 @@ import android.app.Activity
 import android.content.Intent
 import android.content.ActivityNotFoundException
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.location.LocationManagerCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
@@ -21,6 +23,7 @@ import com.smartisan.weather.data.city.CityRepository
 import com.smartisan.weather.data.location.LocationAccess
 import com.smartisan.weather.data.model.Weather
 import com.smartisan.weather.data.network.NetworkMonitor
+import com.smartisan.weather.data.notification.WeatherNotificationManager
 import com.smartisan.weather.data.settings.WeatherSettings
 import com.smartisan.weather.ui.alert.WeatherAlertActivity
 import com.smartisan.weather.ui.citylist.CityListActivity
@@ -61,6 +64,20 @@ class MainActivity : WeatherEdgeToEdgeActivity() {
     private var pendingWidgetCityKey: String? = null
     private val settings by lazy(LazyThreadSafetyMode.NONE) { WeatherSettings.getInstance(this) }
     private val networkMonitor by lazy(LazyThreadSafetyMode.NONE) { NetworkMonitor(this) }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            val city = viewModel.uiState.value.currentCity
+            val weather = city?.let { viewModel.uiState.value.weathers[it.locationKey] }
+            if (city != null && weather?.alert != null && !weather.alert.isEmpty) {
+                lifecycleScope.launch {
+                    WeatherNotificationManager.notifyAlertsIfEligible(this@MainActivity, city.displayName, weather.alert)
+                }
+            }
+        }
+    }
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -269,6 +286,12 @@ class MainActivity : WeatherEdgeToEdgeActivity() {
 
     private fun openAlerts(weather: Weather) {
         if (weather.alert.isEmpty) return
+        if (Build.VERSION.SDK_INT >= 33) {
+            val managerCompat = NotificationManagerCompat.from(this)
+            if (!managerCompat.areNotificationsEnabled()) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
         startActivity(Intent(this, WeatherAlertActivity::class.java).putExtra(WeatherAlertActivity.EXTRA_ALERT, weather.alert))
     }
 

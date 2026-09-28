@@ -163,4 +163,10 @@
     <string name="weather_widget_bg_translucent">半透明磨砂</string>
     <string name="weather_widget_bg_classic">经典天空卡片</string>
     <string name="weather_widget_configure_bg_hint">小部件背景风格</string>
+    <string name="weather_alert_notification_channel_name">灾害天气预警</string>
+    <string name="weather_alert_notification_channel_desc">接收突发气象灾害预警实时推送</string>
+    <string name="weather_alert_notification_title">%1$s发布%2$s%3$s预警</string>
+    <string name="weather_alert_notification_switch">灾害天气预警推送</string>
+    <string name="weather_alert_notification_switch_desc">及时接收暴雨、大风、高温等突发气象预警</string>
+    <string name="weather_alert_notification_permission_tips">需要开启通知权限以接收气象灾害预警推送</string>
 </resources>

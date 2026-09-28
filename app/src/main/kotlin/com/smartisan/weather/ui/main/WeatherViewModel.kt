@@ -13,6 +13,7 @@ import com.smartisan.weather.data.location.LocationCityResolver
 import com.smartisan.weather.data.location.DeviceLocationSource
 import com.smartisan.weather.data.model.SavedCity
 import com.smartisan.weather.data.model.Weather
+import com.smartisan.weather.data.notification.WeatherNotificationManager
 import com.smartisan.weather.data.settings.WeatherSettings
 import com.smartisan.weather.data.weather.WeatherRepository
 import com.smartisan.weather.util.DebugLog
@@ -179,6 +180,14 @@ class WeatherViewModel(app: Application) : AndroidViewModel(app) {
                         _uiState.update { state ->
                             if (state.cities.none { it.locationKey == cityKey }) state
                             else state.copy(weathers = state.weathers + (cityKey to weather))
+                        }
+                        val matchedCity = _uiState.value.cities.firstOrNull { it.locationKey == cityKey }
+                        if (matchedCity != null && !weather.alert.isEmpty) {
+                            WeatherNotificationManager.notifyAlertsIfEligible(
+                                context = getApplication(),
+                                cityName = matchedCity.displayName,
+                                alert = weather.alert,
+                            )
                         }
                     } else {
                         failure = "获取天气数据失败"

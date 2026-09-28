@@ -2,19 +2,27 @@ package com.smartisan.weather.ui.alert
 
 import android.content.res.Configuration
 import android.graphics.Paint
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -37,6 +45,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.smartisan.weather.R
 import com.smartisan.weather.data.model.AlertInfo
 import com.smartisan.weather.ui.components.WeatherDrawable
@@ -49,7 +58,12 @@ import com.smartisan.weather.util.Utility
 
 /** 完整展示每条预警；卡片没有与原界面不符的折叠或摘要状态。 */
 @Composable
-internal fun WeatherAlertScreen(alerts: List<AlertInfo>, onBack: () -> Unit) {
+internal fun WeatherAlertScreen(
+    alerts: List<AlertInfo>,
+    notificationEnabled: Boolean = true,
+    onToggleNotification: (Boolean) -> Unit = {},
+    onBack: () -> Unit,
+) {
     WeatherScreenFrame(backgroundRes = R.drawable.list_bg) {
         Column(Modifier.fillMaxSize()) {
             WeatherTitleBar(
@@ -64,6 +78,12 @@ internal fun WeatherAlertScreen(alerts: List<AlertInfo>, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxSize().testTag("weather_alert_list"),
                     contentPadding = PaddingValues(vertical = 4.dp),
                 ) {
+                    item {
+                        WeatherAlertNotificationSettingCard(
+                            enabled = notificationEnabled,
+                            onToggle = onToggleNotification,
+                        )
+                    }
                     itemsIndexed(alerts, key = { index, _ -> index }) { _, alert ->
                         WeatherAlertCard(alert)
                     }
@@ -76,6 +96,94 @@ internal fun WeatherAlertScreen(alerts: List<AlertInfo>, onBack: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun WeatherAlertNotificationSettingCard(
+    enabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+) {
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(
+                horizontal = dimensionResource(R.dimen.layout_alert_card_margin_horizontal),
+                vertical = 6.dp,
+            )
+            .clip(RoundedCornerShape(6.dp))
+            .weatherDrawableBackground(R.drawable.weather_alert_card_background),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 12.dp,
+                    bottom = 12.dp,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                WeatherText(
+                    text = stringResource(R.string.weather_alert_notification_switch),
+                    color = colorResource(R.color.weather_alert_title_text_color),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(2.dp))
+                WeatherText(
+                    text = stringResource(R.string.weather_alert_notification_switch_desc),
+                    color = colorResource(R.color.item_pager_content_text_content_color),
+                    fontSize = 12.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            SmartisanSwitch(
+                checked = enabled,
+                onCheckedChange = onToggle,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SmartisanSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) colorResource(R.color.switch_track_checked) else colorResource(R.color.switch_track_unchecked),
+        animationSpec = tween(160),
+        label = "switch_track",
+    )
+    val thumbOffset by animateDpAsState(
+        targetValue = if (checked) 22.dp else 2.dp,
+        animationSpec = tween(160),
+        label = "switch_thumb",
+    )
+    Box(
+        modifier = Modifier
+            .size(width = 48.dp, height = 28.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(trackColor)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onCheckedChange(!checked) },
+            ),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(start = thumbOffset)
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(androidx.compose.ui.graphics.Color.White),
+        )
     }
 }
 

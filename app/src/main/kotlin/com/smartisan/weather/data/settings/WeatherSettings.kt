@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.smartisan.weather.appwidget.WeatherWidgetUpdateNotifier
 import java.io.IOException
@@ -50,6 +51,25 @@ class WeatherSettings private constructor(context: Context) {
 
     val startupNoticeAccepted: Flow<Boolean> = preferences
         .map { it[KEY_STARTUP_NOTICE_ACCEPTED] ?: false }
+
+    val alertNotificationEnabled: Flow<Boolean> = preferences
+        .map { it[KEY_ALERT_NOTIFICATION_ENABLED] ?: true }
+
+    suspend fun setAlertNotificationEnabled(enabled: Boolean) {
+        appContext.weatherDataStore.edit { it[KEY_ALERT_NOTIFICATION_ENABLED] = enabled }
+    }
+
+    suspend fun readNotifiedAlertKeys(): Set<String> =
+        preferences.first()[KEY_NOTIFIED_ALERT_KEYS] ?: emptySet()
+
+    suspend fun addNotifiedAlertKeys(keys: Set<String>) {
+        if (keys.isEmpty()) return
+        appContext.weatherDataStore.edit { prefs ->
+            val current = prefs[KEY_NOTIFIED_ALERT_KEYS] ?: emptySet()
+            val updated = (current + keys).takeLast(100).toSet()
+            prefs[KEY_NOTIFIED_ALERT_KEYS] = updated
+        }
+    }
 
     suspend fun setTempUnit(unit: Int) {
         require(unit == UNIT_CELSIUS || unit == UNIT_FAHRENHEIT)
@@ -133,6 +153,8 @@ class WeatherSettings private constructor(context: Context) {
         val KEY_TEMP_UNIT = intPreferencesKey("temp_unit")
         // Keep the persisted key stable so existing development installs are not prompted again.
         private val KEY_STARTUP_NOTICE_ACCEPTED = booleanPreferencesKey("privacy_accepted")
+        private val KEY_ALERT_NOTIFICATION_ENABLED = booleanPreferencesKey("alert_notification_enabled")
+        private val KEY_NOTIFIED_ALERT_KEYS = stringSetPreferencesKey("notified_alert_keys")
         const val UNIT_CELSIUS = 1
         const val UNIT_FAHRENHEIT = 2
         private const val WIDGET_CITY_KEY_PREFIX = "weather_widget_city_"

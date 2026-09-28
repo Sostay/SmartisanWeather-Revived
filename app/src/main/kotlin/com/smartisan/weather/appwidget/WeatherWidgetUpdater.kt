@@ -7,6 +7,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import com.smartisan.weather.data.city.CityRepository
 import com.smartisan.weather.data.model.SavedCity
+import com.smartisan.weather.data.notification.WeatherNotificationManager
 import com.smartisan.weather.data.settings.WeatherSettings
 import com.smartisan.weather.data.weather.WeatherRepository
 import kotlinx.coroutines.CancellationException
@@ -89,6 +90,16 @@ internal object WeatherWidgetUpdater {
                                 throw cancelled
                             } catch (_: Exception) {
                                 null
+                            }
+                        }
+                        if (weather != null && !weather.alert.isEmpty) {
+                            try {
+                                WeatherNotificationManager.notifyAlertsIfEligible(
+                                    context = appContext,
+                                    cityName = city.displayName,
+                                    alert = weather.alert,
+                                )
+                            } catch (_: Exception) {
                             }
                         }
                         city.locationKey.takeUnless { weather?.isComplete == true }

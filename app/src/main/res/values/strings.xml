@@ -167,4 +167,10 @@
     <string name="weather_widget_bg_translucent">Translucent</string>
     <string name="weather_widget_bg_classic">Classic Card</string>
     <string name="weather_widget_configure_bg_hint">Widget Background</string>
+    <string name="weather_alert_notification_channel_name">Weather Alerts</string>
+    <string name="weather_alert_notification_channel_desc">Push notifications for severe weather alerts</string>
+    <string name="weather_alert_notification_title">%1$s issued a %2$s %3$s alert</string>
+    <string name="weather_alert_notification_switch">Severe Weather Alert Notifications</string>
+    <string name="weather_alert_notification_switch_desc">Receive notifications when severe weather alerts are issued</string>
+    <string name="weather_alert_notification_permission_tips">Notification permission is required to receive severe weather alerts.</string>
 </resources>

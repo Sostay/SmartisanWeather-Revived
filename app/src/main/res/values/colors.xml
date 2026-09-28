@@ -82,4 +82,6 @@
     <color name="editor_hint_text_color">#26000000</color>
     <color name="editor_text_color">#cc000000</color>
     <color name="title_or_btn_text_color">#99000000</color>
+    <color name="switch_track_checked">#3d82d1</color>
+    <color name="switch_track_unchecked">#dcdcdc</color>
 </resources>

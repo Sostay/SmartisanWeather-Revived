@@ -158,4 +158,10 @@
     <string name="weather_widget_bg_translucent">半透明すりガラス</string>
     <string name="weather_widget_bg_classic">クラシックカード</string>
     <string name="weather_widget_configure_bg_hint">ウィジェットの背景スタイル</string>
+    <string name="weather_alert_notification_channel_name">気象警報・注意報</string>
+    <string name="weather_alert_notification_channel_desc">気象警報のリアルタイムプッシュ通知を受信します</string>
+    <string name="weather_alert_notification_title">%1$s %2$s%3$s警報が発表されました</string>
+    <string name="weather_alert_notification_switch">気象警报プッシュ通知</string>
+    <string name="weather_alert_notification_switch_desc">大雨、暴風、高温などの警報をタイムリーに受信します</string>
+    <string name="weather_alert_notification_permission_tips">気象警報通知を受信するには、通知の許可が必要です</string>
 </resources>
