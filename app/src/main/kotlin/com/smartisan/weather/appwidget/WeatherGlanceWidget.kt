@@ -527,7 +527,7 @@ private fun CompactWeatherBody(
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.size(128.dp),
+                modifier = GlanceModifier.size(132.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
