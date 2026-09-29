@@ -465,7 +465,7 @@ private fun WidgetHeader(
         Text(
             text = model.cityName,
             modifier = GlanceModifier.defaultWeight(),
-            style = primaryText(sizeSp = if (spec.isWide) 14 else 15, weight = FontWeight.Bold),
+            style = primaryText(sizeSp = if (spec.isWide) 16 else 15, weight = FontWeight.Bold),
             maxLines = 1,
         )
         if (spec.isWide) {
@@ -481,11 +481,11 @@ private fun WidgetHeader(
             } else {
                 Text(
                     text = model.updateText,
-                    style = tertiaryText(sizeSp = 9, align = TextAlign.End),
+                    style = tertiaryText(sizeSp = 11, align = TextAlign.End),
                     maxLines = 1,
                 )
             }
-            Spacer(GlanceModifier.width(5.dp))
+            Spacer(GlanceModifier.width(6.dp))
         }
         Box(
             modifier = GlanceModifier
@@ -517,23 +517,23 @@ private fun CompactWeatherBody(
     modifier: GlanceModifier,
 ) {
     Box(modifier = modifier) {
-        // Top-Right: Weather icon floating in upper-right quadrant
+        // Top-Right: Weather icon floating in upper-right quadrant, closer to top and right edges
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(top = 0.dp, end = 0.dp),
+                .padding(top = 0.dp, end = 4.dp),
             contentAlignment = Alignment.TopEnd,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = model.condition,
-                modifier = GlanceModifier.width(116.dp).height(145.dp),
+                modifier = GlanceModifier.width(112.dp).height(126.dp),
                 contentScale = ContentScale.Fit,
                 colorFilter = whiteTint(),
             )
         }
 
-        // Bottom-Left: Information column anchored at bottom-left without overlapping the icon
+        // Bottom-Left: Information column with comfortable breathing room and enlarged secondary text
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -545,21 +545,21 @@ private fun CompactWeatherBody(
             ) {
                 Text(
                     text = model.temperature,
-                    style = primaryText(sizeSp = 64, weight = FontWeight.Bold),
+                    style = primaryText(sizeSp = 56, weight = FontWeight.Bold),
                     maxLines = 1,
                 )
-                Spacer(GlanceModifier.height(3.dp))
+                Spacer(GlanceModifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = model.condition,
-                        style = primaryText(sizeSp = 16, weight = FontWeight.Medium),
+                        style = primaryText(sizeSp = 17, weight = FontWeight.Medium),
                         maxLines = 1,
                     )
                     model.temperatureRange?.let { range ->
                         Spacer(GlanceModifier.width(6.dp))
                         Text(
                             text = range,
-                            style = secondaryText(sizeSp = 14),
+                            style = secondaryText(sizeSp = 15),
                             maxLines = 1,
                         )
                     }
@@ -578,7 +578,7 @@ private fun CompactWeatherBody(
                     model.aqi?.let { aqi ->
                         Text(
                             text = aqi,
-                            style = tertiaryText(sizeSp = 14),
+                            style = tertiaryText(sizeSp = 15),
                             maxLines = 1,
                         )
                         Spacer(GlanceModifier.height(3.dp))
@@ -590,16 +590,16 @@ private fun CompactWeatherBody(
                 ) {
                     Text(
                         text = model.cityName,
-                        style = secondaryText(sizeSp = 15, weight = FontWeight.Medium),
+                        style = secondaryText(sizeSp = 16, weight = FontWeight.Medium),
                         maxLines = 1,
                     )
-                    Spacer(GlanceModifier.width(4.dp))
+                    Spacer(GlanceModifier.width(5.dp))
                     Image(
                         provider = ImageProvider(R.drawable.weather_widget_refresh),
                         contentDescription = context.getString(
                             R.string.weather_widget_refresh_content_description,
                         ),
-                        modifier = GlanceModifier.size(14.dp),
+                        modifier = GlanceModifier.size(15.dp),
                         colorFilter = whiteTint(),
                     )
                 }
@@ -653,38 +653,42 @@ private fun CurrentConditions(
         Text(
             text = model.temperature,
             modifier = GlanceModifier.fillMaxWidth(),
-            style = primaryText(sizeSp = spec.temperatureSp, weight = FontWeight.Bold),
+            style = primaryText(sizeSp = 48, weight = FontWeight.Bold),
             maxLines = 1,
         )
+        Spacer(GlanceModifier.height(2.dp))
         Row(
-            modifier = GlanceModifier.fillMaxWidth().height(18.dp),
+            modifier = GlanceModifier.fillMaxWidth().height(22.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
                 provider = ImageProvider(model.weatherIconRes),
                 contentDescription = null,
-                modifier = GlanceModifier.size(18.dp),
+                modifier = GlanceModifier.size(22.dp),
                 contentScale = ContentScale.Crop,
                 colorFilter = whiteTint(),
             )
             Spacer(GlanceModifier.width(4.dp))
             Text(
                 text = model.condition,
-                style = primaryText(sizeSp = 10, weight = FontWeight.Medium),
+                style = primaryText(sizeSp = 13, weight = FontWeight.Medium),
                 maxLines = 1,
             )
             model.temperatureRange?.let {
                 Spacer(GlanceModifier.width(6.dp))
-                Text(text = it, style = secondaryText(sizeSp = 9), maxLines = 1)
+                Text(text = it, style = secondaryText(sizeSp = 12), maxLines = 1)
             }
         }
+        Spacer(GlanceModifier.height(2.dp))
         if (spec.showWideAqi) {
             model.aqi?.let {
-                Text(text = it, style = tertiaryText(sizeSp = 9), maxLines = 1)
+                Text(text = it, style = tertiaryText(sizeSp = 11), maxLines = 1)
+                Spacer(GlanceModifier.height(1.dp))
             }
         }
         model.detailMetrics.take(spec.detailMetricSlots).forEach { metric ->
-            Text(text = metric, style = tertiaryText(sizeSp = 9), maxLines = 1)
+            Text(text = metric, style = tertiaryText(sizeSp = 11), maxLines = 1)
+            Spacer(GlanceModifier.height(1.dp))
         }
     }
 }
@@ -696,19 +700,29 @@ private fun ForecastStrip(
     modifier: GlanceModifier,
 ) {
     val forecast = model.forecast.take(slots)
-    if (forecast.isEmpty()) {
-        Box(
-            modifier = modifier.background(
+    val isTransparentBg = model.backgroundStyle == WeatherSettings.WIDGET_BG_STYLE_TRANSPARENT
+
+    val panelModifier = if (isTransparentBg) {
+        modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+    } else {
+        modifier
+            .background(
                 imageProvider = ImageProvider(R.drawable.weather_widget_forecast_panel),
                 contentScale = ContentScale.FillBounds,
-            ),
+            )
+            .padding(horizontal = 5.dp, vertical = 4.dp)
+    }
+
+    if (forecast.isEmpty()) {
+        Box(
+            modifier = panelModifier,
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = androidx.glance.LocalContext.current.getString(
                     R.string.weather_widget_forecast_unavailable,
                 ),
-                style = tertiaryText(sizeSp = 10, align = TextAlign.Center),
+                style = tertiaryText(sizeSp = 11, align = TextAlign.Center),
                 maxLines = 2,
             )
         }
@@ -716,12 +730,7 @@ private fun ForecastStrip(
     }
 
     Row(
-        modifier = modifier
-            .background(
-                imageProvider = ImageProvider(R.drawable.weather_widget_forecast_panel),
-                contentScale = ContentScale.FillBounds,
-            )
-            .padding(horizontal = 5.dp, vertical = 4.dp),
+        modifier = panelModifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         forecast.forEach { item ->
@@ -732,18 +741,20 @@ private fun ForecastStrip(
             ) {
                 Text(
                     text = item.time,
-                    style = tertiaryText(sizeSp = 9, align = TextAlign.Center),
+                    style = tertiaryText(sizeSp = 12, align = TextAlign.Center),
                     maxLines = 1,
                 )
+                Spacer(GlanceModifier.height(4.dp))
                 Image(
                     provider = ImageProvider(item.iconRes),
                     contentDescription = null,
-                    modifier = GlanceModifier.size(24.dp),
+                    modifier = GlanceModifier.size(34.dp),
                     colorFilter = whiteTint(),
                 )
+                Spacer(GlanceModifier.height(4.dp))
                 Text(
                     text = item.temperature,
-                    style = primaryText(sizeSp = 10, weight = FontWeight.Medium, align = TextAlign.Center),
+                    style = primaryText(sizeSp = 13, weight = FontWeight.Medium, align = TextAlign.Center),
                     maxLines = 1,
                 )
             }

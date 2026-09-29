@@ -55,8 +55,22 @@ class WeatherSettings private constructor(context: Context) {
     val alertNotificationEnabled: Flow<Boolean> = preferences
         .map { it[KEY_ALERT_NOTIFICATION_ENABLED] ?: true }
 
+    val dailyNotificationEnabled: Flow<Boolean> = preferences
+        .map { it[KEY_DAILY_NOTIFICATION_ENABLED] ?: true }
+
     suspend fun setAlertNotificationEnabled(enabled: Boolean) {
         appContext.weatherDataStore.edit { it[KEY_ALERT_NOTIFICATION_ENABLED] = enabled }
+    }
+
+    suspend fun setDailyNotificationEnabled(enabled: Boolean) {
+        appContext.weatherDataStore.edit { it[KEY_DAILY_NOTIFICATION_ENABLED] = enabled }
+    }
+
+    suspend fun readLastDailyNotificationDate(): String? =
+        preferences.first()[KEY_LAST_DAILY_NOTIFICATION_DATE]
+
+    suspend fun setLastDailyNotificationDate(date: String) {
+        appContext.weatherDataStore.edit { it[KEY_LAST_DAILY_NOTIFICATION_DATE] = date }
     }
 
     suspend fun readNotifiedAlertKeys(): Set<String> =
@@ -154,6 +168,8 @@ class WeatherSettings private constructor(context: Context) {
         // Keep the persisted key stable so existing development installs are not prompted again.
         private val KEY_STARTUP_NOTICE_ACCEPTED = booleanPreferencesKey("privacy_accepted")
         private val KEY_ALERT_NOTIFICATION_ENABLED = booleanPreferencesKey("alert_notification_enabled")
+        private val KEY_DAILY_NOTIFICATION_ENABLED = booleanPreferencesKey("daily_notification_enabled")
+        private val KEY_LAST_DAILY_NOTIFICATION_DATE = stringPreferencesKey("last_daily_notification_date")
         private val KEY_NOTIFIED_ALERT_KEYS = stringSetPreferencesKey("notified_alert_keys")
         const val UNIT_CELSIUS = 1
         const val UNIT_FAHRENHEIT = 2

@@ -61,8 +61,10 @@ import com.smartisan.weather.util.Utility
 @Composable
 internal fun WeatherAlertScreen(
     alerts: List<AlertInfo>,
-    notificationEnabled: Boolean = true,
-    onToggleNotification: (Boolean) -> Unit = {},
+    alertNotificationEnabled: Boolean = true,
+    dailyNotificationEnabled: Boolean = true,
+    onToggleAlertNotification: (Boolean) -> Unit = {},
+    onToggleDailyNotification: (Boolean) -> Unit = {},
     onBack: () -> Unit,
 ) {
     WeatherScreenFrame(backgroundRes = R.drawable.list_bg) {
@@ -80,9 +82,11 @@ internal fun WeatherAlertScreen(
                     contentPadding = PaddingValues(vertical = 4.dp),
                 ) {
                     item {
-                        WeatherAlertNotificationSettingCard(
-                            enabled = notificationEnabled,
-                            onToggle = onToggleNotification,
+                        WeatherNotificationSettingsCard(
+                            alertEnabled = alertNotificationEnabled,
+                            dailyEnabled = dailyNotificationEnabled,
+                            onToggleAlert = onToggleAlertNotification,
+                            onToggleDaily = onToggleDailyNotification,
                         )
                     }
                     itemsIndexed(alerts, key = { index, _ -> index }) { _, alert ->
@@ -101,9 +105,11 @@ internal fun WeatherAlertScreen(
 }
 
 @Composable
-private fun WeatherAlertNotificationSettingCard(
-    enabled: Boolean,
-    onToggle: (Boolean) -> Unit,
+private fun WeatherNotificationSettingsCard(
+    alertEnabled: Boolean,
+    dailyEnabled: Boolean,
+    onToggleAlert: (Boolean) -> Unit,
+    onToggleDaily: (Boolean) -> Unit,
 ) {
     Column(
         Modifier.fillMaxWidth()
@@ -114,14 +120,10 @@ private fun WeatherAlertNotificationSettingCard(
             .clip(RoundedCornerShape(6.dp))
             .weatherDrawableBackground(R.drawable.weather_alert_card_background),
     ) {
+        // Switch 1: Severe Weather Alert
         Row(
             modifier = Modifier.fillMaxWidth()
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 12.dp,
-                    bottom = 12.dp,
-                ),
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -144,8 +146,47 @@ private fun WeatherAlertNotificationSettingCard(
             }
             Spacer(Modifier.width(12.dp))
             SmartisanSwitch(
-                checked = enabled,
-                onCheckedChange = onToggle,
+                checked = alertEnabled,
+                onCheckedChange = onToggleAlert,
+            )
+        }
+
+        Spacer(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(0.5.dp)
+                .background(colorResource(R.color.weather_alert_seperation_color)),
+        )
+
+        // Switch 2: Daily Weather Briefing
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                WeatherText(
+                    text = stringResource(R.string.weather_daily_notification_switch),
+                    color = colorResource(R.color.weather_alert_title_text_color),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(2.dp))
+                WeatherText(
+                    text = stringResource(R.string.weather_daily_notification_switch_desc),
+                    color = colorResource(R.color.item_pager_content_text_content_color),
+                    fontSize = 12.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            SmartisanSwitch(
+                checked = dailyEnabled,
+                onCheckedChange = onToggleDaily,
             )
         }
     }

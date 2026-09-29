@@ -169,4 +169,9 @@
     <string name="weather_alert_notification_switch">灾害天气预警推送</string>
     <string name="weather_alert_notification_switch_desc">及时接收暴雨、大风、高温等突发气象预警</string>
     <string name="weather_alert_notification_permission_tips">需要开启通知权限以接收气象灾害预警推送</string>
+    <string name="weather_daily_notification_channel_name">每日天气早报</string>
+    <string name="weather_daily_notification_channel_desc">每天早晨定时推送今日天气概况</string>
+    <string name="weather_daily_notification_title">今日天气早报 · %1$s</string>
+    <string name="weather_daily_notification_switch">每日早间天气早报</string>
+    <string name="weather_daily_notification_switch_desc">每天早上 07:30 自动推送今日天气与温差提示</string>
 </resources>

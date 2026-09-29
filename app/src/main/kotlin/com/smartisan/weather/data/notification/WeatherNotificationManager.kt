@@ -21,21 +21,105 @@ import kotlinx.coroutines.flow.first
 object WeatherNotificationManager {
 
     const val CHANNEL_ID_ALERTS = "weather_alerts"
+    const val CHANNEL_ID_DAILY = "weather_daily"
+    private const val NOTIFICATION_ID_DAILY = 2001
 
-    /** 确保在 Android 8.0+ 上创建了天气预警高优先级通知渠道。 */
+    /** 确保在 Android 8.0+ 上创建了天气预警与每日天气早报通知渠道。 */
     fun ensureChannelCreated(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = context.getString(R.string.weather_alert_notification_channel_name)
-            val descriptionText = context.getString(R.string.weather_alert_notification_channel_desc)
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(CHANNEL_ID_ALERTS, name, importance).apply {
-                description = descriptionText
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            val alertsName = context.getString(R.string.weather_alert_notification_channel_name)
+            val alertsDesc = context.getString(R.string.weather_alert_notification_channel_desc)
+            val alertsChannel = NotificationChannel(CHANNEL_ID_ALERTS, alertsName, NotificationManager.IMPORTANCE_HIGH).apply {
+                description = alertsDesc
                 enableLights(true)
                 enableVibration(true)
             }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
+            manager.createNotificationChannel(alertsChannel)
+
+            val dailyName = context.getString(R.string.weather_daily_notification_channel_name)
+            val dailyDesc = context.getString(R.string.weather_daily_notification_channel_desc)
+            val dailyChannel = NotificationChannel(CHANNEL_ID_DAILY, dailyName, NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = dailyDesc
+                enableLights(false)
+                enableVibration(false)
+            }
+            manager.createNotificationChannel(dailyChannel)
         }
+    }
+
+    /**
+     * 发送每日天气早报通知。
+     */
+    @SuppressLint("MissingPermission")
+    suspend fun notifyDailyWeather(
+        context: Context,
+        cityName: String,
+        weather: com.smartisan.weather.data.model.Weather,
+    ) {
+        val settings = WeatherSettings.getInstance(context)
+        if (!settings.dailyNotificationEnabled.first()) return
+
+        val managerCompat = NotificationManagerCompat.from(context)
+        if (!managerCompat.areNotificationsEnabled()) return
+
+        ensureChannelCreated(context)
+
+        val title = context.getString(R.string.weather_daily_notification_title, cityName)
+
+        val isCelsius = settings.readTempUnit() == WeatherSettings.UNIT_CELSIUS
+        val currentTemp = (if (isCelsius) weather.observe.tempC else weather.observe.tempF)
+            .takeUnless { it == "UNKNOWN" }
+            ?.let { "$it°" } ?: ""
+
+        val daily = weather.dailyForecast.firstOrNull()
+        val tempRange = if (daily != null) {
+            val high = if (isCelsius) daily.highTempC else daily.highTempF
+            val low = if (isCelsius) daily.lowTempC else daily.lowTempF
+            "$low° / $high°"
+        } else ""
+
+        val conditionRes = com.smartisan.weather.util.WeatherCodeMapping.textResMap[weather.themeCode]
+            ?: R.string.weather_text_99
+        val condition = context.getString(conditionRes)
+
+        val aqiValue = weather.observe.aqi.ifBlank { weather.airQuality.aqiValue }
+        val aqiText = aqiValue.toIntOrNull()?.let { aqi ->
+            val level = com.smartisan.weather.util.WeatherCodeMapping.AqiLevel.getLevel(aqi)
+            val levelText = context.getString(com.smartisan.weather.util.WeatherCodeMapping.AqiLevel.levelTextRes[level])
+            " · 空气 $aqi $levelText"
+        }.orEmpty()
+
+        val contentParts = buildList {
+            add(condition)
+            if (currentTemp.isNotBlank()) add("当前 $currentTemp")
+            if (tempRange.isNotBlank()) add("全天 $tempRange")
+        }
+        val contentText = contentParts.joinToString("，") + aqiText
+
+        val intent = Intent(context, com.smartisan.weather.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            NOTIFICATION_ID_DAILY,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID_DAILY)
+            .setSmallIcon(R.drawable.weather_error_icon)
+            .setContentTitle(title)
+            .setContentText(contentText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        managerCompat.notify(NOTIFICATION_ID_DAILY, notification)
     }
 
     /**

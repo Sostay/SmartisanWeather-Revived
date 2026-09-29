@@ -173,4 +173,9 @@
     <string name="weather_alert_notification_switch">Severe Weather Alert Notifications</string>
     <string name="weather_alert_notification_switch_desc">Receive notifications when severe weather alerts are issued</string>
     <string name="weather_alert_notification_permission_tips">Notification permission is required to receive severe weather alerts.</string>
+    <string name="weather_daily_notification_channel_name">Daily Weather Briefing</string>
+    <string name="weather_daily_notification_channel_desc">Daily morning weather summary and forecast</string>
+    <string name="weather_daily_notification_title">Daily Weather · %1$s</string>
+    <string name="weather_daily_notification_switch">Daily Morning Weather Briefing</string>
+    <string name="weather_daily_notification_switch_desc">Receive today\'s weather summary every morning at 07:30</string>
 </resources>

@@ -12,5 +12,6 @@ class SmartisanWeatherApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         WeatherNotificationManager.ensureChannelCreated(this)
+        com.smartisan.weather.data.notification.DailyWeatherNotificationScheduler.scheduleNext(this)
     }
 }
