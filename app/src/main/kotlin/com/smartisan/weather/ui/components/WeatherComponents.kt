@@ -34,11 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.platform.LocalResources
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.smartisan.weather.R
+import com.smartisan.weather.util.ThemeUtils
 
 /** Full-window original background, safe interactive area, and the original phone canvas. */
 @Composable
@@ -177,13 +180,30 @@ fun WeatherIconButton(
 ) {
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectWeatherPressedAsState()
+    val isNight = ThemeUtils.isNightMode(LocalContext.current)
     Box(
         modifier.size(dimensionResource(R.dimen.standard_icon_size))
             .semantics { description?.let { contentDescription = it } }
             .clickable(interactions, indication = null, enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        WeatherDrawable(resId, null, Modifier.fillMaxSize(), enabled, pressed, contentScale = ContentScale.Inside)
+        WeatherDrawable(
+            resId = resId,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            enabled = enabled,
+            pressed = pressed,
+            contentScale = ContentScale.Inside,
+            colorFilter = if (isNight && (resId == R.drawable.standard_icon_back_selector || resId == R.drawable.back_icon_normal)) {
+                ColorFilter.tint(
+                    when {
+                        !enabled -> colorResource(R.color.title_bar_icon_disabled)
+                        pressed -> colorResource(R.color.title_bar_icon_pressed)
+                        else -> colorResource(R.color.title_bar_icon_normal)
+                    }
+                )
+            } else null,
+        )
     }
 }
 

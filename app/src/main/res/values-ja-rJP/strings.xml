@@ -164,9 +164,9 @@
     <string name="weather_alert_notification_switch">気象警报プッシュ通知</string>
     <string name="weather_alert_notification_switch_desc">大雨、暴風、高温などの警報をタイムリーに受信します</string>
     <string name="weather_alert_notification_permission_tips">気象警報通知を受信するには、通知の許可が必要です</string>
-    <string name="weather_daily_notification_channel_name">毎日の天気予報</string>
-    <string name="weather_daily_notification_channel_desc">毎朝今日の天気予報をプッシュ通知します</string>
+    <string name="weather_daily_notification_channel_name">毎日の天気</string>
+    <string name="weather_daily_notification_channel_desc">毎朝今日の天気予报をプッシュ通知します</string>
     <string name="weather_daily_notification_title">今日の天気 · %1$s</string>
-    <string name="weather_daily_notification_switch">毎朝の天気予報通知</string>
+    <string name="weather_daily_notification_switch">毎日の天気通知</string>
     <string name="weather_daily_notification_switch_desc">毎朝 07:30 に今日の天気と気温の概要を自動通知します</string>
 </resources>

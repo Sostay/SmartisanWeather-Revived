@@ -17,6 +17,8 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.layout.ContentScale
@@ -35,6 +37,7 @@ import com.smartisan.weather.data.model.SavedCity
 import com.smartisan.weather.data.settings.WeatherSettings
 import com.smartisan.weather.ui.components.*
 import com.smartisan.weather.ui.navigation.WeatherEdgeToEdgeActivity
+import com.smartisan.weather.util.ThemeUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -236,17 +239,27 @@ private fun ConfigurationChoiceRow(
     ) {
         WeatherText(label, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         val context = LocalContext.current
+        val isNight = ThemeUtils.isNightMode(context)
         val configuration = LocalConfiguration.current
         val indicator = remember(context, configuration) {
             context.obtainStyledAttributes(intArrayOf(android.R.attr.listChoiceIndicatorSingle)).let { attributes ->
                 try { requireNotNull(attributes.getDrawable(0)).mutate() } finally { attributes.recycle() }
             }
         }
+        val invertMatrix = remember {
+            ColorMatrix(floatArrayOf(
+                -1f, 0f, 0f, 0f, 255f,
+                0f, -1f, 0f, 0f, 255f,
+                0f, 0f, -1f, 0f, 255f,
+                0f, 0f, 0f, 1f, 0f,
+            ))
+        }
         Image(
             painter = rememberWeatherDrawablePainter(indicator, pressed = pressed, checked = selected),
             contentDescription = null,
             modifier = Modifier.padding(start = 12.dp).size(32.dp),
             contentScale = ContentScale.Inside,
+            colorFilter = if (isNight) ColorFilter.colorMatrix(invertMatrix) else null,
         )
     }
     Spacer(Modifier.fillMaxWidth().height(0.5.dp).background(colorResource(R.color.divider_listview)))

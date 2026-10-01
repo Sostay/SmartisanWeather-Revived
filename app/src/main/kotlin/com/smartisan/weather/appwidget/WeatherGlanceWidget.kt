@@ -735,26 +735,27 @@ private fun ForecastStrip(
     ) {
         forecast.forEach { item ->
             Column(
-                modifier = GlanceModifier.defaultWeight(),
+                modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = item.time,
-                    style = tertiaryText(sizeSp = 12, align = TextAlign.Center),
+                    style = tertiaryText(sizeSp = 13, align = TextAlign.Center),
                     maxLines = 1,
                 )
-                Spacer(GlanceModifier.height(4.dp))
+                Spacer(GlanceModifier.height(8.dp))
                 Image(
                     provider = ImageProvider(item.iconRes),
                     contentDescription = null,
-                    modifier = GlanceModifier.size(34.dp),
+                    modifier = GlanceModifier.width(48.dp).height(58.dp),
+                    contentScale = ContentScale.Fit,
                     colorFilter = whiteTint(),
                 )
-                Spacer(GlanceModifier.height(4.dp))
+                Spacer(GlanceModifier.height(8.dp))
                 Text(
                     text = item.temperature,
-                    style = primaryText(sizeSp = 13, weight = FontWeight.Medium, align = TextAlign.Center),
+                    style = primaryText(sizeSp = 15, weight = FontWeight.Medium, align = TextAlign.Center),
                     maxLines = 1,
                 )
             }
