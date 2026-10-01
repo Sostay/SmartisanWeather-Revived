@@ -109,8 +109,12 @@ object WeatherNotificationManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
+        val weatherCode = weather.themeCode.ifBlank { weather.observe.code }
+        val weatherIconRes = com.smartisan.weather.util.WeatherCodeMapping.getIcon(weatherCode, isNight = false)
+            .takeIf { it > 0 } ?: R.drawable.little_icon_sunny
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_DAILY)
-            .setSmallIcon(R.drawable.weather_error_icon)
+            .setSmallIcon(weatherIconRes)
             .setContentTitle(title)
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
