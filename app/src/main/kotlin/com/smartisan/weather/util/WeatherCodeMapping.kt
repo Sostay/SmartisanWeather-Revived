@@ -180,6 +180,39 @@ object WeatherCodeMapping {
         return if (isNight && set.nightIcon != -1) set.nightIcon else set.dayIcon
     }
 
+    private val notificationIconMap: Map<Int, Int> = mapOf(
+        R.drawable.little_icon_sunny to R.drawable.ic_notify_icon_sunny,
+        R.drawable.little_icon_sunny_night to R.drawable.ic_notify_icon_sunny_night,
+        R.drawable.little_icon_cloudy to R.drawable.ic_notify_icon_cloudy,
+        R.drawable.little_icon_cloudy_night to R.drawable.ic_notify_icon_cloudy_night,
+        R.drawable.little_icon_overcast to R.drawable.ic_notify_icon_overcast,
+        R.drawable.little_icon_shower to R.drawable.ic_notify_icon_shower,
+        R.drawable.little_icon_thundershower to R.drawable.ic_notify_icon_thundershower,
+        R.drawable.little_icon_thundershower_night to R.drawable.ic_notify_icon_thundershower_night,
+        R.drawable.little_icon_thundershowerhail to R.drawable.ic_notify_icon_thundershowerhail,
+        R.drawable.little_icon_thundershowerhail_night to R.drawable.ic_notify_icon_thundershowerhail_night,
+        R.drawable.little_icon_icerain to R.drawable.ic_notify_icon_icerain,
+        R.drawable.little_icon_lightrain to R.drawable.ic_notify_icon_lightrain,
+        R.drawable.little_icon_moderaterain to R.drawable.ic_notify_icon_moderaterain,
+        R.drawable.little_icon_heavyrain to R.drawable.ic_notify_icon_heavyrain,
+        R.drawable.little_icon_storm to R.drawable.ic_notify_icon_storm,
+        R.drawable.little_icon_snow to R.drawable.ic_notify_icon_snow,
+        R.drawable.little_icon_snow_night to R.drawable.ic_notify_icon_snow_night,
+        R.drawable.little_icon_lightsnow to R.drawable.ic_notify_icon_lightsnow,
+        R.drawable.little_icon_moderatesnow to R.drawable.ic_notify_icon_moderatesnow,
+        R.drawable.little_icon_heavysnow to R.drawable.ic_notify_icon_heavysnow,
+        R.drawable.little_icon_foggy to R.drawable.ic_notify_icon_foggy,
+        R.drawable.little_icon_haze to R.drawable.ic_notify_icon_haze,
+        R.drawable.little_icon_sandstorm to R.drawable.ic_notify_icon_sandstorm,
+        R.drawable.little_icon_unknown to R.drawable.ic_notify_icon_unknown,
+    )
+
+    /** 获取 1:1 正方形的通知专用天气图标，防止系统通知栏小图标拉伸变形 */
+    fun getNotificationIcon(code: String?, isNight: Boolean = false): Int {
+        val baseIcon = getIcon(code, isNight)
+        return notificationIconMap[baseIcon] ?: baseIcon
+    }
+
     /** 获取阴影图标 */
     fun getShadowIcon(code: String?, isNight: Boolean = false): Int {
         val set = getIconSet(code)

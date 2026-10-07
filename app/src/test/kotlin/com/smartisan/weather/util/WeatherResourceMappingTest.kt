@@ -50,4 +50,12 @@ class WeatherResourceMappingTest {
         assertEquals(R.drawable.button_refresh_icon_rain, rain.getRefreshSrcRes())
         assertEquals(R.drawable.bg_weather_info_rain, rain.getInfoBgRes())
     }
+
+    @Test
+    fun `notification icons return dedicated square notification drawables`() {
+        assertEquals(R.drawable.ic_notify_icon_sunny, WeatherCodeMapping.getNotificationIcon("00", false))
+        assertEquals(R.drawable.ic_notify_icon_sunny_night, WeatherCodeMapping.getNotificationIcon("00", true))
+        assertEquals(R.drawable.ic_notify_icon_cloudy, WeatherCodeMapping.getNotificationIcon("01", false))
+        assertEquals(R.drawable.ic_notify_icon_unknown, WeatherCodeMapping.getNotificationIcon("99", false))
+    }
 }

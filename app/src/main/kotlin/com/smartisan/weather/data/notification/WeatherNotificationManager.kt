@@ -110,8 +110,8 @@ object WeatherNotificationManager {
         )
 
         val weatherCode = weather.themeCode.ifBlank { weather.observe.code }
-        val weatherIconRes = com.smartisan.weather.util.WeatherCodeMapping.getIcon(weatherCode, isNight = false)
-            .takeIf { it > 0 } ?: R.drawable.little_icon_sunny
+        val weatherIconRes = com.smartisan.weather.util.WeatherCodeMapping.getNotificationIcon(weatherCode, isNight = false)
+            .takeIf { it > 0 } ?: R.drawable.ic_notify_icon_sunny
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_DAILY)
             .setSmallIcon(weatherIconRes)
